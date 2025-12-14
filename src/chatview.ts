@@ -1,11 +1,11 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian';
-import Counter from './components/Counter.svelte';
+import ChatContainer from './components/ChatContainer.svelte';
 import { mount, unmount } from 'svelte';
 
 export const VIEW_TYPE_CHAT = 'chat-view';
 
 export class ChatView extends ItemView {
-	counter: ReturnType<typeof Counter> | undefined;
+	counter: ReturnType<typeof ChatContainer> | undefined;
 
 	constructor(leaf: WorkspaceLeaf) {
 		super(leaf);
@@ -20,7 +20,7 @@ export class ChatView extends ItemView {
 	}
 
 	async onOpen() {
-		this.counter = mount(Counter, {
+		this.counter = mount(ChatContainer, {
 			target: this.contentEl,
 		});
 	}

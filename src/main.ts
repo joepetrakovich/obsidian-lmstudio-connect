@@ -4,19 +4,19 @@ import { ChatView, VIEW_TYPE_CHAT } from './chatview';
 export default class LMStudioConnectPlugin extends Plugin {
 
 	async onload() {
-		console.log("onload MyPlugin");
+		console.log("onload LMStudioConnectPlugin");
 		this.registerView(
 			VIEW_TYPE_CHAT,
 			(leaf) => new ChatView(leaf)
 		);
 
 		this.addRibbonIcon('bot-message-square', 'LMStudio Chat', () => {
-			 this.activateView()
+			this.activateView()
 		});
 	}
 
 	async onunload() {
-		console.log("unload MyPlugin");
+		console.log("unload LMStudioConnectPlugin");
 	}
 
 	async activateView() {
@@ -32,6 +32,6 @@ export default class LMStudioConnectPlugin extends Plugin {
 			await leaf?.setViewState({ type: VIEW_TYPE_CHAT, active: true });
 		}
 
-		workspace.revealLeaf(leaf);
+		workspace.revealLeaf(leaf)
 	}
 }
