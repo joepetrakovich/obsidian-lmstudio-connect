@@ -25,5 +25,9 @@
 		"svelte-preprocess": "^6.0.3",
 		"tslib": "2.4.0",
 		"typescript": "~5.0.0"
+	},
+	"dependencies": {
+		"@ai-sdk/openai-compatible": "^1.0.29",
+		"ai": "^5.0.113"
 	}
 }

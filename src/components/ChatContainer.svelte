@@ -1,9 +1,15 @@
+<script>
+	import ModelPicker from "./ModelPicker.svelte";
+</script>
+
 <div class="container">
 	<small>placeholder header</small>
 	<div class="chatbox">
-		<input type=text />
+		<input type="text" />
 		<div class="toolbar">
-			<button>fake</button>
+			<div>
+				<ModelPicker />
+			</div>
 			<button>send</button>
 		</div>
 	</div>
@@ -23,7 +29,7 @@
 		gap: var(--size-4-1);
 		border: var(--border-width) solid var(--background-modifier-border);
 		border-radius: var(--radius-s);
-		padding: var(--size-4-1); 
+		padding: var(--size-4-1);
 	}
 
 	.toolbar {
@@ -32,4 +38,3 @@
 		gap: var(--size-4-1);
 	}
 </style>
-
