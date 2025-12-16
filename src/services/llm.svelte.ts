@@ -1,4 +1,4 @@
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { createOpenAICompatible, type OpenAICompatibleProvider } from "@ai-sdk/openai-compatible";
 import { type RequestUrlParam, type RequestUrlResponse, requestUrl } from "obsidian";
 import type { ModelInfo } from "./models";
 
@@ -52,17 +52,26 @@ const customFetch = async (input: string, init?: RequestInit): Promise<Response>
 	return fetchResp;
 };
 
-export const lmstudio = (baseURL: string, model: string) => createOpenAICompatible({
-	name: "lmstudio",
-	baseURL,
-	fetch: customFetch,
-})(model);
+function getLMStudio() {
+	let modelId: string = $state('');
+	let baseURL: string = $state('');
+	let provider = $derived(createOpenAICompatible({
+		name: "lmstudio",
+		baseURL,
+		fetch: customFetch
+	}));
 
-export const listModels = async (baseURL: string): Promise<ModelInfo[]> => {
-	const response: RequestUrlResponse = await requestUrl(`${baseURL}/models`);
-	const { data } = response.json as { data: ModelInfo[] };
-	console.log("/models: ", data);
-	return data
+	return {
+		setBaseURL: (url: string) => baseURL = url,
+		listModels: async (): Promise<ModelInfo[]> => {
+			const response: RequestUrlResponse = await requestUrl(`${baseURL}/models`);
+			const { data } = response.json as { data: ModelInfo[] };
+			return data
+		},
+		setModelId: (id: string) => modelId = id,
+		get model() { return provider(modelId) },
+	};
 }
 
+export const lmstudio = getLMStudio();
 

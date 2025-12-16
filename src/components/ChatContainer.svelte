@@ -1,26 +1,14 @@
 <script lang="ts">
-	import { lmstudio } from "src/services/llm";
 	import ModelPicker from "./ModelPicker.svelte";
 	import { generateText } from "ai";
-	import type LMStudioConnectPlugin from "src/main";
-	import type { ModelInfo } from "src/services/models";
-
-	//most likely will have a global llm client rune thats configured via components rather than here.
-	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
-	let { baseURL } = plugin.settings;
-
-	let model: ModelInfo | null = $state(null);
+	import { lmstudio } from "src/services/llm.svelte";
+	
 	let message: string = $state('');
 	let response = $state(); //prob gonna use ai Chat sdk...
 
-	$effect(() => {
-		console.log(plugin);
-		console.log(model);
-	});
-
 	async function send() {
 		const result = await generateText({
-			model: lmstudio(baseURL, model!.id),
+			model: lmstudio.model, 
 			prompt: message,
 		});
 
@@ -36,7 +24,7 @@
 		<textarea bind:value={message}></textarea>
 		<div class="toolbar">
 			<div>
-				<ModelPicker {baseURL} bind:value={model} />
+				<ModelPicker />
 			</div>
 			<button onclick={send}>send</button>
 		</div>

@@ -1,12 +1,14 @@
 <script lang="ts">
-	import { listModels } from "../services/llm";
-	let { baseURL, value = $bindable() } = $props();
+	import { lmstudio } from "src/services/llm.svelte";
+	import type { ModelInfo } from "src/services/models";
+
+	let value: ModelInfo | undefined = $state();
 </script>
 
-{#await listModels(baseURL)}
+{#await lmstudio.listModels() }
 	<p>waiting for the promise to resolve...</p>
 {:then models}
-	<select bind:value>
+	<select bind:value onchange={() => value && lmstudio.setModelId(value.id)}>
 		{#each models as model}
 			<option value={model}>
 				{model.id}
