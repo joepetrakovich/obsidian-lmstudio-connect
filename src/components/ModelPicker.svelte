@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { listModels } from "../services/llm";
-	let { value = $bindable() } = $props();
+	let { baseURL, value = $bindable() } = $props();
 </script>
 
-{#await listModels()}
+{#await listModels(baseURL)}
 	<p>waiting for the promise to resolve...</p>
 {:then models}
 	<select bind:value>

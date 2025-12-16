@@ -1,13 +1,19 @@
 import { Plugin, WorkspaceLeaf } from 'obsidian';
 import { ChatView, VIEW_TYPE_CHAT } from './chatview';
+import { DEFAULT_SETTINGS, SettingsTab, type PluginSettings } from './settings';
 
 export default class LMStudioConnectPlugin extends Plugin {
+	settings: PluginSettings;
 
 	async onload() {
 		console.log("onload LMStudioConnectPlugin");
+		await this.loadSettings();
+		
+		this.addSettingTab(new SettingsTab(this.app, this));
+		
 		this.registerView(
 			VIEW_TYPE_CHAT,
-			(leaf) => new ChatView(leaf)
+			(leaf) => new ChatView(leaf, this)
 		);
 
 		this.addRibbonIcon('bot-message-square', 'LMStudio Chat', () => {
@@ -33,5 +39,13 @@ export default class LMStudioConnectPlugin extends Plugin {
 		}
 
 		workspace.revealLeaf(leaf)
+	}
+
+	async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	}
+
+	async saveSettings() {
+		await this.saveData(this.settings);
 	}
 }

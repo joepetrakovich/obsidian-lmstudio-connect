@@ -52,14 +52,13 @@ const customFetch = async (input: string, init?: RequestInit): Promise<Response>
 	return fetchResp;
 };
 
-const baseURL = "http://localhost:1234/v1";
-export const lmstudio = createOpenAICompatible({
+export const lmstudio = (baseURL: string, model: string) => createOpenAICompatible({
 	name: "lmstudio",
 	baseURL,
 	fetch: customFetch,
-});
+})(model);
 
-export const listModels = async (): Promise<ModelInfo[]> => {
+export const listModels = async (baseURL: string): Promise<ModelInfo[]> => {
 	const response: RequestUrlResponse = await requestUrl(`${baseURL}/models`);
 	const { data } = response.json as { data: ModelInfo[] };
 	console.log("/models: ", data);

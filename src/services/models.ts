@@ -1,9 +1,9 @@
 //models (interfaces/types, not llms...)
 
 export interface ModelInfo {
-	id: String, 
-	object: String,
-	type: String,
-	state: String,
+	id: string, 
+	object: string,
+	type: string,
+	state: string,
 	max_context_length: number
 }
