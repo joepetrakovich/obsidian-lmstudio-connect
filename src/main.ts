@@ -1,16 +1,15 @@
 import { Plugin, WorkspaceLeaf } from 'obsidian';
 import { ChatView, VIEW_TYPE_CHAT } from './chatview';
-import { DEFAULT_SETTINGS, SettingsTab, type PluginSettings } from './settings';
+import { settings, DEFAULT_SETTINGS, SettingsTab, type PluginSettings } from './settings.svelte';
 
 export default class LMStudioConnectPlugin extends Plugin {
-	settings: PluginSettings;
 
 	async onload() {
 		console.log("onload LMStudioConnectPlugin");
 		await this.loadSettings();
-		
+
 		this.addSettingTab(new SettingsTab(this.app, this));
-		
+
 		this.registerView(
 			VIEW_TYPE_CHAT,
 			(leaf) => new ChatView(leaf, this)
@@ -42,10 +41,10 @@ export default class LMStudioConnectPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		Object.assign(settings, await this.loadData());
 	}
 
 	async saveSettings() {
-		await this.saveData(this.settings);
+		await this.saveData(settings);
 	}
 }

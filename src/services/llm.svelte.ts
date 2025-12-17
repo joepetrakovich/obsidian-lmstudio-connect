@@ -38,7 +38,7 @@ function toObsidianRequestParams(url: RequestInfo | URL, init?: RequestInit): Re
 	return obsidianReq;
 }
 
-const customFetch = async (input: string, init?: RequestInit): Promise<Response> => {
+export const customFetch = async (input: string, init?: RequestInit): Promise<Response> => {
 	console.log("Intercepting request to URL:", input);
 	console.log("Request options:", JSON.stringify(init, null, 2));
 
@@ -51,27 +51,4 @@ const customFetch = async (input: string, init?: RequestInit): Promise<Response>
 		});
 	return fetchResp;
 };
-
-function getLMStudio() {
-	let modelId: string = $state('');
-	let baseURL: string = $state('');
-	let provider = $derived(createOpenAICompatible({
-		name: "lmstudio",
-		baseURL,
-		fetch: customFetch
-	}));
-
-	return {
-		setBaseURL: (url: string) => baseURL = url,
-		listModels: async (): Promise<ModelInfo[]> => {
-			const response: RequestUrlResponse = await requestUrl(`${baseURL}/models`);
-			const { data } = response.json as { data: ModelInfo[] };
-			return data
-		},
-		setModelId: (id: string) => modelId = id,
-		get model() { return provider(modelId) },
-	};
-}
-
-export const lmstudio = getLMStudio();
 

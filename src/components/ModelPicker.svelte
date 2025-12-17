@@ -1,24 +1,28 @@
 <script lang="ts">
-	import { lmstudio } from "src/services/llm.svelte";
-	import type { ModelInfo } from "src/services/models";
+	import { requestUrl } from "obsidian";
+	import type { ModelInfo } from "../services/models";
 
-	let value: ModelInfo | undefined = $state();
+	let { baseURL, model: value = $bindable() } = $props();
+
+	let listModels = $derived(async () => {
+		return await requestUrl(`${baseURL}/models`).then((response) => {
+			const { data } = response.json as { data: ModelInfo[] };
+			return data;
+		});
+	});
 </script>
 
-{#await lmstudio.listModels() }
+{#await listModels()}
 	<p>waiting for the promise to resolve...</p>
 {:then models}
-	<select bind:value onchange={() => value && lmstudio.setModelId(value.id)}>
+	<select bind:value> 
 		{#each models as model}
-			<option value={model}>
-				{model.id}
-			</option>
+			<option>{model.id}</option>
 		{/each}
 	</select>
 {:catch error}
 	<p>Something went wrong: {error.message}</p>
-{/await} 
-
+{/await}
 
 <style>
 	select {

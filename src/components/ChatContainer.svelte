@@ -1,14 +1,27 @@
 <script lang="ts">
-	import ModelPicker from "./ModelPicker.svelte";
+	import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 	import { generateText } from "ai";
-	import { lmstudio } from "src/services/llm.svelte";
-	
-	let message: string = $state('');
+	import type LMStudioConnectPlugin from "src/main";
+	import { customFetch } from "src/services/llm.svelte";
+	import { settings } from "src/settings.svelte";
+	import ModelPicker from "./ModelPicker.svelte";
+
+	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
+	let provider = $derived(
+		createOpenAICompatible({
+			name: "lmstudio",
+			baseURL: settings.baseURL,
+			fetch: customFetch,
+		}),
+	);
+
+	let model: string = $state("");
+	let message: string = $state("");
 	let response = $state(); //prob gonna use ai Chat sdk...
 
 	async function send() {
 		const result = await generateText({
-			model: lmstudio.model, 
+			model: provider(model),
 			prompt: message,
 		});
 
@@ -24,7 +37,7 @@
 		<textarea bind:value={message}></textarea>
 		<div class="toolbar">
 			<div>
-				<ModelPicker />
+				<ModelPicker baseURL={settings.baseURL} bind:model />
 			</div>
 			<button onclick={send}>send</button>
 		</div>
