@@ -3,13 +3,18 @@ import type LMStudioConnectPlugin from "./main";
 
 export interface PluginSettings {
 	baseURL: string;
+	lastUsedModel: string
 }
 
 export const DEFAULT_SETTINGS: Partial<PluginSettings> = {
 	baseURL: 'http://localhost:1234/v1'
 }
 
-export const settings: PluginSettings = $state(Object.assign(DEFAULT_SETTINGS));
+export function createSettings() {
+	let settings: PluginSettings = $state(Object.assign(DEFAULT_SETTINGS));
+
+	return settings; 
+}
 
 export class SettingsTab extends PluginSettingTab {
 	plugin: LMStudioConnectPlugin;
@@ -30,9 +35,9 @@ export class SettingsTab extends PluginSettingTab {
 			.addText((text) =>
 				text
 					.setPlaceholder('http://localhost:1234/v1')
-					.setValue(settings.baseURL)
+					.setValue(this.plugin.settings.baseURL)
 					.onChange(async (value) => {
-						settings.baseURL = value;
+						this.plugin.settings.baseURL = value;
 						await this.plugin.saveSettings();
 					})
 			);

@@ -1,6 +1,4 @@
-import { createOpenAICompatible, type OpenAICompatibleProvider } from "@ai-sdk/openai-compatible";
 import { type RequestUrlParam, type RequestUrlResponse, requestUrl } from "obsidian";
-import type { ModelInfo } from "./models";
 
 function toObsidianRequestParams(url: RequestInfo | URL, init?: RequestInit): RequestUrlParam {
 	const fetchReq = (typeof url === 'string' || url instanceof String) ? null : (url as Request);

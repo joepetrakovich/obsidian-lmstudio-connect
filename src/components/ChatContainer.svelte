@@ -2,23 +2,27 @@
 	import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 	import { generateText } from "ai";
 	import type LMStudioConnectPlugin from "src/main";
-	import { customFetch } from "src/services/llm.svelte";
-	import { settings } from "src/settings.svelte";
+	import { customFetch } from "../services/fetch";
 	import ModelPicker from "./ModelPicker.svelte";
 
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
 	let provider = $derived(
 		createOpenAICompatible({
 			name: "lmstudio",
-			baseURL: settings.baseURL,
+			baseURL: plugin.settings.baseURL,
 			fetch: customFetch,
 		}),
 	);
-
-	let model: string = $state("");
+	
+	let model: string = $state(plugin.settings.lastUsedModel); 
 	let message: string = $state("");
 	let response = $state(); //prob gonna use ai Chat sdk...
 
+	$effect(() => {
+		plugin.settings.lastUsedModel = model;
+		plugin.saveSettings();
+	});
+	
 	async function send() {
 		const result = await generateText({
 			model: provider(model),
@@ -37,7 +41,7 @@
 		<textarea bind:value={message}></textarea>
 		<div class="toolbar">
 			<div>
-				<ModelPicker baseURL={settings.baseURL} bind:model />
+				<ModelPicker baseURL={plugin.settings.baseURL} bind:model />
 			</div>
 			<button onclick={send}>send</button>
 		</div>
