@@ -1,44 +1,67 @@
 <script lang="ts">
 	import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-	import { generateText } from "ai";
+	import { streamText } from "ai";
 	import type LMStudioConnectPlugin from "src/main";
-	import { customFetch } from "../services/fetch";
 	import ModelPicker from "./ModelPicker.svelte";
+	import type { ChatMessage } from "src/services/models";
 
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
 	let provider = $derived(
 		createOpenAICompatible({
 			name: "lmstudio",
 			baseURL: plugin.settings.baseURL,
-			fetch: customFetch,
 		}),
 	);
-	
-	let model: string = $state(plugin.settings.lastUsedModel); 
-	let message: string = $state("");
-	let response = $state(); //prob gonna use ai Chat sdk...
+	let model: string = $state(plugin.settings.lastUsedModel);
 
+	//TODO: check, does this cause looping since model and lastused are state?
 	$effect(() => {
 		plugin.settings.lastUsedModel = model;
 		plugin.saveSettings();
 	});
-	
-	async function send() {
-		const result = await generateText({
-			model: provider(model),
-			prompt: message,
-		});
 
-		console.log(result);
-		response = result.text;
+	function onkeydown(e: KeyboardEvent) {
+		if (e.key == "Enter" && !e.shiftKey) {
+			e.preventDefault();
+			send();
+		}
+	}
+
+	let input = $state("");
+	let chat: ChatMessage[] = $state([]);
+
+	async function send() {
+		chat.push({ role: "user", parts: [input] });
+		const result = streamText({
+			model: provider(model),
+			prompt: input,
+		});
+		input = "";
+
+		chat.push({ role: "ai", parts: [] });
+		const response = chat[chat.length - 1];
+		for await (const textPart of result.textStream) {
+			response.parts.push(textPart);
+		}
 	}
 </script>
 
 <div class="container">
 	<small>placeholder header</small>
-	{response}
+	<ul>
+		{#each chat as message}
+			<li>
+				<div>{message.role}</div>
+				<div>
+					{#each $state.eager(message.parts) as part}
+						{part}
+					{/each}
+				</div>
+			</li>
+		{/each}
+	</ul>
 	<div class="chatbox">
-		<textarea bind:value={message}></textarea>
+		<textarea bind:value={input} {onkeydown}></textarea>
 		<div class="toolbar">
 			<div>
 				<ModelPicker baseURL={plugin.settings.baseURL} bind:model />
