@@ -1,6 +1,6 @@
 import { Plugin, WorkspaceLeaf } from 'obsidian';
 import { ChatView, VIEW_TYPE_CHAT } from './chatview';
-import { DEFAULT_SETTINGS, SettingsTab, type PluginSettings, createSettings } from './settings.svelte';
+import { SettingsTab, type PluginSettings, createSettings } from './settings.svelte';
 
 export default class LMStudioConnectPlugin extends Plugin {
 	settings: PluginSettings;

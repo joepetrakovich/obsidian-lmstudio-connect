@@ -3,7 +3,9 @@
 	import { streamText } from "ai";
 	import type LMStudioConnectPlugin from "src/main";
 	import ModelPicker from "./ModelPicker.svelte";
-	import type { ChatMessage } from "src/services/models";
+	import { Role, type ChatMessage } from "src/services/models";
+	import Messages from "./Messages.svelte";
+	import { icon } from "./Icon.svelte";
 
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
 	let provider = $derived(
@@ -28,38 +30,49 @@
 	}
 
 	let input = $state("");
-	let chat: ChatMessage[] = $state([]);
+	let messages: ChatMessage[] = $state([]);
+
+	//dummy text
+	messages.push({ role: Role.User, parts: ["how how r u?"] });
+	messages.push({ role: Role.AI, parts: ["not bad, hbu tho?"] });
 
 	async function send() {
-		chat.push({ role: "user", parts: [input] });
+		messages.push({ role: Role.User, parts: [input] });
 		const result = streamText({
 			model: provider(model),
 			prompt: input,
 		});
 		input = "";
 
-		chat.push({ role: "ai", parts: [] });
-		const response = chat[chat.length - 1];
+		messages.push({ role: Role.AI, parts: [] });
+		const response = messages[messages.length - 1];
 		for await (const textPart of result.textStream) {
 			response.parts.push(textPart);
 		}
 	}
+
+	function clearMessages(e: Event) {
+		e.preventDefault();
+		messages = [];
+	}
 </script>
 
 <div class="container">
-	<small>placeholder header</small>
-	<ul>
-		{#each chat as message}
-			<li>
-				<div>{message.role}</div>
-				<div>
-					{#each $state.eager(message.parts) as part}
-						{part}
-					{/each}
-				</div>
-			</li>
-		{/each}
-	</ul>
+	<div>
+		<div class="top-toolbar">
+			<div
+				tabindex="0"
+				{@attach icon("trash")}
+				class="clickable-icon"
+				onclick={clearMessages}
+				onkeydown={clearMessages}
+				aria-label="delete-chat"
+				role="button"
+			></div>
+		</div>
+		<Messages {messages} />
+	</div>
+
 	<div class="chatbox">
 		<textarea bind:value={input} {onkeydown}></textarea>
 		<div class="toolbar">
@@ -78,7 +91,9 @@
 		flex-direction: column;
 		justify-content: space-between;
 	}
-
+	.top-toolbar {
+		display: flex;
+	}
 	.chatbox {
 		display: flex;
 		flex-direction: column;

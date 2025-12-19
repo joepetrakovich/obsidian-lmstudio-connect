@@ -8,7 +8,9 @@ export interface ModelInfo {
 	max_context_length: number
 }
 
+export enum Role { AI = "ai", User = "user" }
+
 export interface ChatMessage {
-	role: string;
+	role: Role;
 	parts: string[]
 }
