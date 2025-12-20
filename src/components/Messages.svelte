@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { setIcon } from "obsidian";
 	import { type ChatMessage } from "src/services/models";
-	import { icon } from "./Icon.svelte";
 	let { messages }: { messages: ChatMessage[] } = $props();
 </script>
 

@@ -2,11 +2,11 @@
 	import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 	import { streamText } from "ai";
 	import type LMStudioConnectPlugin from "src/main";
-	import ModelPicker from "./ModelPicker.svelte";
 	import { Role, type ChatMessage } from "src/services/models";
 	import Messages from "./Messages.svelte";
 	import { icon } from "./Icon.svelte";
-
+    import ChatInput from "./ChatInput.svelte";
+	
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
 	let provider = $derived(
 		createOpenAICompatible({
@@ -22,12 +22,6 @@
 		plugin.saveSettings();
 	});
 
-	function onkeydown(e: KeyboardEvent) {
-		if (e.key == "Enter" && !e.shiftKey) {
-			e.preventDefault();
-			send();
-		}
-	}
 
 	let input = $state("");
 	let messages: ChatMessage[] = $state([]);
@@ -50,7 +44,7 @@
 			response.parts.push(textPart);
 		}
 	}
-
+	//TODO: move to top toolbar component
 	function clearMessages(e: Event) {
 		e.preventDefault();
 		messages = [];
@@ -73,15 +67,7 @@
 		<Messages {messages} />
 	</div>
 
-	<div class="chatbox">
-		<textarea bind:value={input} {onkeydown}></textarea>
-		<div class="toolbar">
-			<div>
-				<ModelPicker baseURL={plugin.settings.baseURL} bind:model />
-			</div>
-			<button onclick={send}>send</button>
-		</div>
-	</div>
+	<ChatInput bind:input bind:model baseURL={plugin.settings.baseURL} onsend={send} />
 </div>
 
 <style>
