@@ -1,7 +1,12 @@
 <script lang="ts">
 	import ModelPicker from "./ModelPicker.svelte";
 
-	let { input: value = $bindable(), model = $bindable(), baseURL, onsend } = $props();
+	let {
+		input: value = $bindable(),
+		model = $bindable(),
+		baseURL,
+		onsend
+	} = $props();
 
 	function onkeydown(e: KeyboardEvent) {
 		if (e.key == "Enter" && !e.shiftKey) {
