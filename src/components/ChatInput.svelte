@@ -13,7 +13,7 @@
 </script>
 
 <div class="chatbox">
-	<textarea bind:value {onkeydown}></textarea>
+	<textarea bind:value {onkeydown} placeholder="Send a message to the model..."></textarea>
 	<div class="toolbar">
 		<div>
 			<ModelPicker />
@@ -30,16 +30,16 @@
 	.chatbox {
 		display: flex;
 		flex-direction: column;
-		gap: var(--size-4-1);
+		gap: 0;
 		border: var(--border-width) solid var(--background-modifier-border);
 		border-radius: var(--radius-s);
-		padding: var(--size-4-1);
+		padding: 0 var(--size-4-2) var(--size-4-2) var(--size-4-2);
 	}
 
 	.toolbar {
 		display: flex;
 		justify-content: space-between;
-		gap: var(--size-4-1);
+		gap: var(--size-4-2);
 	}
 
 	textarea {
@@ -49,6 +49,7 @@
 		resize: none;
 		border: none;
 		background: transparent;
+		padding: var(--size-4-2) 0;
 	}
 
 	textarea:focus,
