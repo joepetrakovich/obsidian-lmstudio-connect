@@ -1,11 +1,12 @@
 <script lang="ts">
+	import { icon } from "./Icon.svelte";
 	import ModelPicker from "./ModelPicker.svelte";
 
 	let {
 		input: value = $bindable(),
 		model = $bindable(),
 		baseURL,
-		onsend
+		onsend,
 	} = $props();
 
 	function onkeydown(e: KeyboardEvent) {
@@ -22,7 +23,11 @@
 		<div>
 			<ModelPicker {baseURL} bind:model />
 		</div>
-		<button onclick={onsend}>send</button>
+		<button title="send"
+			disabled={!value}
+			{@attach icon("arrow-up")}
+			onclick={onsend}
+		></button>
 	</div>
 </div>
 
@@ -56,5 +61,23 @@
 		border: none;
 		outline: none;
 		box-shadow: none;
+	}
+	button {
+		color: var(--text-on-accent);
+		border-radius: 50%;
+		box-shadow: none;
+		padding: var(--size-2-2) var(--size-2-3);	
+	}
+	button:enabled {
+		background-color: var(--interactive-accent);
+		transition: all var(--anim-duration-fast) ease-in-out;
+	}
+	button:hover {
+		background-color: var(--interactive-accent-hover);
+	}
+	button:disabled,button:disabled:hover {
+		background-color: var(--background-primary);
+		color: var(--text-muted);
+		opacity: .6
 	}
 </style>
