@@ -9,8 +9,10 @@ export interface ModelInfo {
 }
 
 export enum Role { AI = "ai", User = "user" }
+export enum Status { Pending, Streaming, Complete }
 
 export interface ChatMessage {
+	status: Status; 
 	role: Role;
 	parts: string[]
 }
