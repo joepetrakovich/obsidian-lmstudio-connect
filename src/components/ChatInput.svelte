@@ -1,13 +1,8 @@
 <script lang="ts">
 	import { icon } from "./Icon.svelte";
 	import ModelPicker from "./ModelPicker.svelte";
-
-	let {
-		input: value = $bindable(),
-		model = $bindable(),
-		baseURL,
-		onsend,
-	} = $props();
+	
+	let { input: value = $bindable(), onsend } = $props();
 
 	function onkeydown(e: KeyboardEvent) {
 		if (e.key == "Enter" && !e.shiftKey) {
@@ -21,7 +16,7 @@
 	<textarea bind:value {onkeydown}></textarea>
 	<div class="toolbar">
 		<div>
-			<ModelPicker {baseURL} bind:model />
+			<ModelPicker />
 		</div>
 		<button title="send"
 			disabled={!value}

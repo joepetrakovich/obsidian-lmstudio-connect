@@ -1,28 +1,24 @@
 <script lang="ts">
 	import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 	import { streamText, type ModelMessage } from "ai";
-	import type LMStudioConnectPlugin from "src/main";
+	import LMStudioConnectPlugin from "src/main";
 	import { Role, Status, type ChatMessage } from "src/services/models";
 	import ChatInput from "./ChatInput.svelte";
 	import TopToolbar from "./TopToolbar.svelte";
-	import { tick } from "svelte";
 	import { icon } from "./Icon.svelte";
+	import { tick } from "svelte";
 	import { fade } from "svelte/transition";
+	import { setSettingsContext } from "src/services/context";
 
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
+	setSettingsContext(plugin.settings);
+
 	let provider = $derived(
 		createOpenAICompatible({
 			name: "lmstudio",
 			baseURL: plugin.settings.baseURL,
 		}),
 	);
-	let model: string = $state(plugin.settings.lastUsedModel);
-
-	//TODO: check, does this cause looping since model and lastused are state?
-	$effect(() => {
-		plugin.settings.lastUsedModel = model;
-		plugin.saveSettings();
-	});
 
 	let input = $state("");
 	let messages: ChatMessage[] = $state([]);
@@ -42,7 +38,7 @@
 		messages.push({ role: Role.User, status: Status.Complete, parts: [input] });
 		messages.push({ role: Role.AI, status: Status.Pending, parts: [] });
 		const result = streamText({
-			model: provider(model),
+			model: provider(plugin.settings.lastUsedModel),
 			prompt: toApiMessages(messages.slice(0,-1)),
 		});
 		input = "";
@@ -87,8 +83,6 @@
 
 	<ChatInput
 		bind:input
-		bind:model
-		baseURL={plugin.settings.baseURL}
 		onsend={send}
 	/>
 </div>

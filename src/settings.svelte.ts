@@ -10,10 +10,31 @@ export const DEFAULT_SETTINGS: Partial<PluginSettings> = {
 	baseURL: 'http://localhost:1234/v1'
 }
 
-export function createSettings() {
-	let settings: PluginSettings = $state(Object.assign(DEFAULT_SETTINGS));
+type PersistenceConfig = { save: (data: any) => Promise<void>, load: () => Promise<any> }; 
 
-	return settings; 
+// Creates settings that auto-persist when modified using a provided save function.
+export async function createSettings(persistence: PersistenceConfig) {
+	let settings: PluginSettings = $state(Object.assign(DEFAULT_SETTINGS));
+	let destroy: () => void | undefined;
+
+	await persistence
+		.load()
+		.then(initial => {
+			settings = Object.assign({}, DEFAULT_SETTINGS, initial);
+			destroy = $effect.root(() => {
+				$effect(() => {
+					persistence.save(settings);
+				});
+			});
+		});
+
+	const dispose = () => {
+		if (destroy) {
+			destroy();
+		}
+	}
+	
+	return { settings, dispose }
 }
 
 export class SettingsTab extends PluginSettingTab {
@@ -38,7 +59,6 @@ export class SettingsTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.baseURL)
 					.onChange(async (value) => {
 						this.plugin.settings.baseURL = value;
-						await this.plugin.saveSettings();
 					})
 			);
 	}

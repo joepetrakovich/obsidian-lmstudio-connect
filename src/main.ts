@@ -4,10 +4,17 @@ import { SettingsTab, type PluginSettings, createSettings } from './settings.sve
 
 export default class LMStudioConnectPlugin extends Plugin {
 	settings: PluginSettings;
-
+	unloadSettings: () => void;
+	
 	async onload() {
 		console.log("onload LMStudioConnectPlugin");
-		await this.loadSettings();
+
+		const { settings, dispose } = await createSettings({
+			save: this.saveData.bind(this),
+			load: this.loadData.bind(this)
+		});
+		this.settings = settings!;
+		this.unloadSettings = dispose;
 
 		this.addSettingTab(new SettingsTab(this.app, this));
 
@@ -23,6 +30,7 @@ export default class LMStudioConnectPlugin extends Plugin {
 
 	async onunload() {
 		console.log("unload LMStudioConnectPlugin");
+		this.unloadSettings();
 	}
 
 	async activateView() {
@@ -39,14 +47,5 @@ export default class LMStudioConnectPlugin extends Plugin {
 		}
 
 		workspace.revealLeaf(leaf)
-	}
-
-	async loadSettings() {
-		this.settings = createSettings();
-		Object.assign(this.settings, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
 	}
 }
