@@ -25,7 +25,7 @@
 	});
 </script>
 
-<li class={message.role} {@attach (node) => { node.scrollIntoView({ behavior: "smooth" }); }}>
+<li class={[ message.role, message.status ]} {@attach (node) => { node.scrollIntoView({ behavior: "smooth" }); }}>
 	<div in:fade bind:this={content}>
 		{#if message.role === Role.User}
 			{message.parts.join('')}	
@@ -61,7 +61,20 @@
 	li.ai {
 		align-self: flex-start;
 	}
+	li.ai > div {
+		padding: var(--size-4-2);
+		border-radius: var(--radius-s);
+		transition: background-color var(--anim-duration-fast) ease-in-out;
+	}
 
+	li.ai.complete > div {
+		background-color: hsl(var(--accent-h) calc(var(--accent-s) * .25) var(--accent-l) / 2% );
+	}
+
+	li.ai.complete > div:hover {
+		background-color: hsl(var(--accent-h) calc(var(--accent-s) * .25) var(--accent-l) / 5% );
+	}
+	
 	li.ai:last-of-type {
 		min-height: var(--buffer-height);
 		flex-shrink: 0;
