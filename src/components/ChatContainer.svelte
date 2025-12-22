@@ -87,6 +87,7 @@
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
+		gap: var(--size-4-1);
 	}
 
 	ul {
@@ -95,7 +96,7 @@
 		list-style-type: none;
 		display: flex;
 		flex-direction: column;
-		gap: 20px;
+		gap: var(--size-4-3);
 		padding: 0;
 		margin: var(--size-4-1) 0;
 	}

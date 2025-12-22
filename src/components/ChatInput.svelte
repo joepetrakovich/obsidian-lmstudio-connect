@@ -15,9 +15,7 @@
 <div class="chatbox">
 	<textarea bind:value {onkeydown} placeholder="Send a message to the model..."></textarea>
 	<div class="toolbar">
-		<div>
-			<ModelPicker />
-		</div>
+		<ModelPicker />
 		<button title="send"
 			disabled={!value}
 			{@attach icon("arrow-up")}
@@ -39,6 +37,7 @@
 		display: flex;
 		justify-content: space-between;
 		gap: var(--size-4-2);
+		align-items: center;
 	}
 
 	textarea {

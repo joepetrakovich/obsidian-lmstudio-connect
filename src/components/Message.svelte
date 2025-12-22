@@ -30,7 +30,7 @@
 		{#if message.role === Role.User}
 			{message.parts.join('')}	
 		{:else if message.status === Status.Pending}
-			<div class="loading" {@attach icon("loader-pinwheel")}></div>
+			<div class="loading" {@attach icon("loader")}></div>
 		{:else if message.status === Status.Streaming}
 			{#key message.parts}
 				<div {@attach markdown(message.parts.join(''))}></div>
@@ -61,6 +61,7 @@
 	li.ai {
 		align-self: flex-start;
 	}
+
 	li.ai > div {
 		padding: var(--size-4-2);
 		border-radius: var(--radius-s);
@@ -68,11 +69,13 @@
 	}
 
 	li.ai.complete > div {
-		background-color: hsl(var(--accent-h) calc(var(--accent-s) * .25) var(--accent-l) / 2% );
+		background-color: color-mix(in srgb, var(--background-primary), transparent 80%);
+		/* background-color: hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 2% ); */
 	}
 
 	li.ai.complete > div:hover {
-		background-color: hsl(var(--accent-h) calc(var(--accent-s) * .25) var(--accent-l) / 5% );
+		/* background-color: hsl(var(--accent-h) calc(var(--accent-s) * .25) var(--accent-l) / 5% ); */
+		background-color: var(--background-primary);
 	}
 	
 	li.ai:last-of-type {
