@@ -5,10 +5,10 @@
 	import { Role, Status, type ChatMessage } from "src/services/models";
 	import ChatInput from "./ChatInput.svelte";
 	import TopToolbar from "./TopToolbar.svelte";
-	import { icon } from "./Icon.svelte";
 	import { tick } from "svelte";
-	import { fade } from "svelte/transition";
 	import { setSettingsContext } from "src/services/context";
+	import EmptyView from "./EmptyView.svelte";
+	import Message from "./Message.svelte";
 
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
 	setSettingsContext(plugin.settings);
@@ -66,19 +66,13 @@
 	<TopToolbar onclear={clearMessages} />
 
 	<ul bind:this={messagesContainer} style="--buffer-height: {bufferHeight}px">
-		{#each messages as message}
-			<li class={message.role} {@attach (node) => {node.scrollIntoView({ behavior: "smooth" })}}>
-				<div in:fade>
-					{#if message.status === Status.Pending}
-						<div class="loading" {@attach icon('loader-pinwheel')}></div>
-					{:else if message.status === Status.Streaming}
-						{#each message.parts as part}<span in:fade>{part}</span>{/each}
-					{:else}
-						{message.parts.join('')}
-					{/if}
-				</div>
-			</li>
-		{/each}
+		{#if messages.length}
+			{#each messages as message}
+				<Message {message} />
+			{/each}
+		{:else}
+			<EmptyView />
+		{/if}
 	</ul>
 
 	<ChatInput
@@ -106,33 +100,4 @@
 		margin: var(--size-4-1) 0;
 	}
 
-	li {
-		padding-left: 0;
-	}
-
-	li.user {
-		align-self: flex-end;
-		background: var(--background-primary);
-		padding: var(--size-4-2);
-		border-radius: var(--radius-l);
-	}
-
-	li.ai {
-		color: white;
-		align-self: flex-start;
-	}
-
-	li.ai:last-of-type {
-		min-height: var(--buffer-height);
-		flex-shrink: 0;
-	}
-
-	.loading :global(svg) {
-		animation: spin 2s linear infinite;
-	}
-
-	@keyframes spin {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
-	}
 </style>

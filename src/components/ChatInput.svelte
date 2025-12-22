@@ -30,7 +30,6 @@
 	.chatbox {
 		display: flex;
 		flex-direction: column;
-		gap: 0;
 		border: var(--border-width) solid var(--background-modifier-border);
 		border-radius: var(--radius-s);
 		padding: 0 var(--size-4-2) var(--size-4-2) var(--size-4-2);

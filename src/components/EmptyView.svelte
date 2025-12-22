@@ -1,12 +1,21 @@
-<pre>
+<div>
+	<pre>
  __         __    __     ______     ______   
 /\ \       /\ "-./  \   /\  ___\   /\  ___\  
 \ \ \____  \ \ \-./\ \  \ \___  \  \ \ \____ 
  \ \_____\  \ \_\ \ \_\  \/\_____\  \ \_____\
   \/_____/   \/_/  \/_/   \/_____/   \/_____/
-</pre>
+	</pre>
+</div>
 
-## LM Studio Connect
-
-An Obsidian plugin that provides an AI Chat interface to an LM Studio instance.  Allows you to
-use LLMs with your notes.
+<style>
+	div {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		font-size: 6px;
+		color: var(--interactive-accent)
+	}
+</style> 
