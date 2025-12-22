@@ -18,7 +18,7 @@
 
 	let content: HTMLDivElement;
 	$effect(() => {
-		if (message.role === Role.AI && message.status === Status.Complete) {
+		if (message.role === Role.Assistant && message.status === Status.Complete) {
 			//TODO: component may need to be the leaf for proper cleanup
 			MarkdownRenderer.render(plugin.app, message.parts.join(''), content, '', plugin);
 		}
@@ -58,27 +58,25 @@
 		border-radius: var(--radius-l);
 	}
 
-	li.ai {
+	li.assistant {
 		align-self: flex-start;
 	}
 
-	li.ai > div {
+	li.assistant > div {
 		padding: var(--size-4-2);
 		border-radius: var(--radius-s);
 		transition: background-color var(--anim-duration-fast) ease-in-out;
 	}
 
-	li.ai.complete > div {
+	li.assistant.complete > div {
 		background-color: color-mix(in srgb, var(--background-primary), transparent 80%);
-		/* background-color: hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 2% ); */
 	}
 
-	li.ai.complete > div:hover {
-		/* background-color: hsl(var(--accent-h) calc(var(--accent-s) * .25) var(--accent-l) / 5% ); */
+	li.assistant.complete > div:hover {
 		background-color: var(--background-primary);
 	}
 	
-	li.ai:last-of-type {
+	li.assistant:last-of-type {
 		min-height: var(--buffer-height);
 		flex-shrink: 0;
 	}

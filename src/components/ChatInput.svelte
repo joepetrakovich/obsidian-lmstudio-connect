@@ -37,7 +37,7 @@
 		display: flex;
 		justify-content: space-between;
 		gap: var(--size-4-2);
-		align-items: center;
+		/* align-items: center; */
 	}
 
 	textarea {

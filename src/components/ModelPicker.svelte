@@ -10,6 +10,8 @@
 	const plugin: LMStudioConnectPlugin = getPluginContext();
 	const settings: PluginSettings = plugin.settings;
 	
+	let select: HTMLSelectElement;
+
 	let listModels = $derived(async () => {
 		return await requestUrl(`${settings.baseURL}/models`).then((response) => {
 			const { data } = response.json as { data: ModelInfo[] };
@@ -43,11 +45,17 @@
 		</div>
 {:then models}
 	{#if models?.length}
-		<select bind:value={settings.lastUsedModel}> 
-			{#each models as model}
-				<option value={model.id}>{formatModelName(model.id)}</option>
-			{/each}
-		</select>
+		<div class="custom-dropdown">
+			<button onclick={() => select.showPicker()}>
+				<span class="text">{formatModelName(settings.lastUsedModel)}</span>
+				<span class="icon" {@attach icon('chevrons-up-down')}></span>
+			</button>
+			<select bind:this={select} bind:value={settings.lastUsedModel}> 
+				{#each models as model}
+					<option>{model.id}</option>
+				{/each}
+			</select>
+		</div>
 	{:else}
 		{@render error()}
 	{/if}
@@ -57,24 +65,72 @@
 
 
 <style>
-	select {
-		appearance: base-select;
+	.custom-dropdown {
+		display: flex;
+		position: relative;
+		flex: 1;
+	}
+
+	.custom-dropdown button {
+		position: absolute;	
+		top: 0;
+		left: 0;
+		display: flex;
+		gap: var(--size-4-1); 
+		max-width: 100%;
+		box-shadow: none;
+		color: var(--text-muted);
+		background-color: var(--dropdown-background);
+	}
+
+	.custom-dropdown button:hover {
+		background-color: var(--dropdown-background-hover);
+	}
+
+	.custom-dropdown span.text {
+		max-width: 130px;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	.custom-dropdown span.icon {
+		display: flex;
+		align-items: center;
+		height: var(--icon-s);
+		width: var(--icon-s);
+	}
+
+	select {	
+		visibility:hidden; 
+		appearance: none;
 		padding: unset;
-		height: unset;
+		height:0;	
+		/* height: unset; */
 		padding: var(--size-4-2);
 		background: var(--interactive-normal);
 		box-shadow: none;
 		border: var(--border-width) solid var(--color-black);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		max-width: 110px;
 	}
 
 	select:hover {
 		background: var(--interactive-hover);
 	}
 
-	span, .connecting, .error {
+	.connecting, .error {
 		display: flex;
 		align-items: center;
 		align-self: flex-end;
+	}
+
+	.connecting span,
+	.error span {
+		display: flex;
+		align-items: center;
 	}
 
 	.connecting,.error {

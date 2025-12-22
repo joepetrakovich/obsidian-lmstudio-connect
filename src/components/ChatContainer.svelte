@@ -28,15 +28,12 @@
 	const gap = 20;
 
 	function toApiMessages(messages: ChatMessage[]): ModelMessage[] {
-		return messages.map(m => 
-			m.role === Role.AI ? { role: 'system', content: m.parts.join('') } 
-				: { role: 'user', content: m.parts.join('') } 
-		);
+		return messages.map(m => ({ role: m.role, content: m.parts.join('') }));
 	}
 
 	async function send() {
 		messages.push({ role: Role.User, status: Status.Complete, parts: [input] });
-		messages.push({ role: Role.AI, status: Status.Pending, parts: [] });
+		messages.push({ role: Role.Assistant, status: Status.Pending, parts: [] });
 		const result = streamText({
 			model: provider(plugin.settings.lastUsedModel),
 			prompt: toApiMessages(messages.slice(0,-1)),

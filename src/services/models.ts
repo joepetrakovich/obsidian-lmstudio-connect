@@ -8,7 +8,7 @@ export interface ModelInfo {
 	max_context_length: number
 }
 
-export enum Role { AI = "ai", User = "user" }
+export enum Role { Assistant = "assistant", User = "user" }
 export enum Status { Pending = "pending", Streaming = "streaming", Complete = "complete" }
 
 export interface ChatMessage {
