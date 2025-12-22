@@ -1,19 +1,40 @@
 <script lang="ts">
 	import { fade } from "svelte/transition";
 	import { icon } from "./Icon.svelte";
-	import { type ChatMessage, Status } from "src/services/models";
+	import { type ChatMessage, Role, Status } from "src/services/models";
+	import { MarkdownRenderer } from "obsidian";
+	import { getPluginContext } from "src/services/context";
+	import type { Attachment } from "svelte/attachments";
 
+	const plugin = getPluginContext();	
 	let { message }: { message: ChatMessage } = $props();
+	
+	export function markdown(content: string): Attachment {
+		return (element) => {
+			 element.innerHTML = "";		
+			 MarkdownRenderer.render(plugin.app, content, element as HTMLElement, '', plugin);				
+		};
+	}
+
+	let content: HTMLDivElement;
+	$effect(() => {
+		if (message.role === Role.AI && message.status === Status.Complete) {
+			//TODO: component may need to be the leaf for proper cleanup
+			MarkdownRenderer.render(plugin.app, message.parts.join(''), content, '', plugin);
+		}
+	});
 </script>
 
 <li class={message.role} {@attach (node) => { node.scrollIntoView({ behavior: "smooth" }); }}>
-	<div in:fade>
-		{#if message.status === Status.Pending}
+	<div in:fade bind:this={content}>
+		{#if message.role === Role.User}
+			{message.parts.join('')}	
+		{:else if message.status === Status.Pending}
 			<div class="loading" {@attach icon("loader-pinwheel")}></div>
 		{:else if message.status === Status.Streaming}
-			{#each message.parts as part}<span in:fade>{part}</span>{/each}
-		{:else}
-			{message.parts.join("")}
+			{#key message.parts}
+				<div {@attach markdown(message.parts.join(''))}></div>
+			{/key}	
 		{/if}
 	</div>
 </li>
@@ -21,18 +42,23 @@
 <style>
 	li {
 		padding-left: 0;
-		font-size: (--var-font-small);
+		font-size: var(--font-small);
+		color: var(--text-normal); 
+	}
+
+	li > div :global(p:first-child) {
+		margin-top: 0;
+		padding-top: 0;
 	}
 
 	li.user {
 		align-self: flex-end;
-		background: var(--background-primary);
+		background: var(--background-primary); 
 		padding: var(--size-4-2);
 		border-radius: var(--radius-l);
 	}
 
 	li.ai {
-		color: white;
 		align-self: flex-start;
 	}
 

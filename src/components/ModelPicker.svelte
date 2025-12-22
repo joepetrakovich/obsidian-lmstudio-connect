@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { requestUrl } from "obsidian";
 	import type { ModelInfo } from "../services/models";
-	import { getSettingsContext } from "src/services/context";
+	import { getPluginContext } from "src/services/context";
 	import type { PluginSettings } from "src/settings.svelte";
-	
-	let settings: PluginSettings = getSettingsContext();
+	import type LMStudioConnectPlugin from "src/main";
+
+	const plugin: LMStudioConnectPlugin = getPluginContext();
+	const settings: PluginSettings = plugin.settings;
 	
 	let listModels = $derived(async () => {
 		return await requestUrl(`${settings.baseURL}/models`).then((response) => {

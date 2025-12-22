@@ -6,12 +6,12 @@
 	import ChatInput from "./ChatInput.svelte";
 	import TopToolbar from "./TopToolbar.svelte";
 	import { tick } from "svelte";
-	import { setSettingsContext } from "src/services/context";
+	import { setPluginContext } from "src/services/context";
 	import EmptyView from "./EmptyView.svelte";
 	import Message from "./Message.svelte";
 
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
-	setSettingsContext(plugin.settings);
+	setPluginContext(plugin);		
 
 	let provider = $derived(
 		createOpenAICompatible({
