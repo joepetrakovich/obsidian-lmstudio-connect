@@ -13,7 +13,7 @@
 
 	const plugin: LMStudioConnectPlugin = getPluginContext();
 	const settings: PluginSettings = plugin.settings;
-
+	
 	let select: HTMLSelectElement;
 
 	async function listModels(baseURL: String) {
@@ -31,7 +31,9 @@
 	}
 
 	let listModelsFromAllServers = $derived(async () => {
-		const listModelsPromises = settings.servers.map((s) => listModels(s.url),);
+		const listModelsPromises = settings.servers.map((s) =>
+			listModels(s.url),
+		);
 		return Promise.allSettled(listModelsPromises).then((results) => {
 			return results.map((r, i) => ({
 				server: settings.servers[i],
@@ -50,20 +52,32 @@
 	}
 
 	//TODO: cleanup, this is all quite wonky just for multiple servers.
-	let value: { server: LMStudioServer, model: ModelInfo } | undefined = $state();
+	let value: { server: LMStudioServer; model: ModelInfo } | undefined =
+		$state();
 	function onchange() {
 		if (value) {
 			const { server, model } = value;
 			settings.currentServer = { ...server, lastUsedModel: model.id };
-		}			
+		}
 	}
 </script>
 
 {#snippet error()}
-	<div class="error" {@attach tooltip("Verify base URL and enable CORS in LM Studio")}>
+	<div
+		class="error"
+		{@attach tooltip("Verify base URL and enable CORS in LM Studio")}
+	>
 		<span {@attach icon("circle-off")}></span>
 		No models found
 	</div>
+{/snippet}
+
+{#snippet modelOptions(server: LMStudioServer, models: ModelInfo[])}
+	{#each models as model}
+		<option value={{ server, model }}>
+			{model.id}
+		</option>
+	{/each}
 {/snippet}
 
 {#await listModelsFromAllServers()}
@@ -71,16 +85,22 @@
 		<span {@attach icon("loader")}></span>
 		Connecting...
 	</div>
-{:then results}
-	{@const serverModelPairs = results.flatMap(r => r.models.map(model => ({ server: r.server, model }))) }
+{:then modelsByServer}
+	{@const multiserver = modelsByServer.length > 1}
 	<div class="custom-dropdown">
 		<button onclick={() => select.showPicker()}>
-			<span class="text">{settings.currentServer.name}:{settings.currentServer.lastUsedModel}</span>
+			<div class="text">
+				<span>{formatModelName(settings.currentServer.lastUsedModel)}</span>
+			</div>
 			<span class="icon" {@attach icon("chevrons-up-down")}></span>
 		</button>
 		<select bind:this={select} bind:value {onchange}>
-			{#each serverModelPairs as { server, model }}
-				<option value={{ server, model }}>{`${server.name}:${model.id}`}</option>	
+			{#each modelsByServer as { server, models }}
+				{#if multiserver}
+					<optgroup label={server.name}>{@render modelOptions(server, models)}</optgroup>
+				{:else}
+					{@render modelOptions(server, models)}
+				{/if}
 			{/each}
 		</select>
 	</div>
@@ -111,7 +131,7 @@
 		background-color: var(--dropdown-background-hover);
 	}
 
-	.custom-dropdown span.text {
+	.custom-dropdown div.text {
 		max-width: 130px;
 		overflow: hidden;
 		white-space: nowrap;
