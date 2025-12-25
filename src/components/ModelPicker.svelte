@@ -2,67 +2,91 @@
 	import { requestUrl } from "obsidian";
 	import type { ModelInfo } from "../services/models";
 	import { getPluginContext } from "src/services/context";
-	import type { PluginSettings } from "src/settings.svelte";
+	import {
+		MODELS_ENDPOINT,
+		type LMStudioServer,
+		type PluginSettings,
+	} from "src/settings.svelte";
 	import type LMStudioConnectPlugin from "src/main";
 	import { tooltip } from "./Tooltip.svelte";
 	import { icon } from "./Icon.svelte";
 
 	const plugin: LMStudioConnectPlugin = getPluginContext();
 	const settings: PluginSettings = plugin.settings;
-	
+
 	let select: HTMLSelectElement;
 
-	let listModels = $derived(async () => {
-		return await requestUrl(`${settings.baseURL}/models`).then((response) => {
+	async function listModels(baseURL: String) {
+		try {
+			const response = await requestUrl(`${baseURL + MODELS_ENDPOINT}`);
 			const { data } = response.json as { data: ModelInfo[] };
 			return data;
-		})
-		.catch((error) => {
-			console.error(error);
+		} catch (error) {
+			console.error(
+				`Error calling GET ${MODELS_ENDPOINT} at ${baseURL}: `,
+				error,
+			);
 			throw error;
+		}
+	}
+
+	let listModelsFromAllServers = $derived(async () => {
+		const listModelsPromises = settings.servers.map((s) => listModels(s.url),);
+		return Promise.allSettled(listModelsPromises).then((results) => {
+			return results.map((r, i) => ({
+				server: settings.servers[i],
+				models: r.status === "fulfilled" ? r.value : [],
+			}));
 		});
 	});
 
 	// Model names are usually formatted like 'company/model' so truncate company
 	// if it exists.
 	function formatModelName(name: string) {
-		const parts = name.split('/');
-		return parts.length > 1 ? name.substring(parts[0].length + 1) : parts[0];
+		const parts = name.split("/");
+		return parts.length > 1
+			? name.substring(parts[0].length + 1)
+			: parts[0];
+	}
+
+	//TODO: cleanup, this is all quite wonky just for multiple servers.
+	let value: { server: LMStudioServer, model: ModelInfo } | undefined = $state();
+	function onchange() {
+		if (value) {
+			const { server, model } = value;
+			settings.currentServer = { ...server, lastUsedModel: model.id };
+		}			
 	}
 </script>
 
 {#snippet error()}
 	<div class="error" {@attach tooltip("Verify base URL and enable CORS in LM Studio")}>
-		<span {@attach icon('circle-off')}></span>
+		<span {@attach icon("circle-off")}></span>
 		No models found
 	</div>
 {/snippet}
 
-{#await listModels()}
-		<div class="connecting" {@attach tooltip('Looking for LM Studio...')}>
-			<span {@attach icon("loader")}></span>
-			Connecting...
-		</div>
-{:then models}
-	{#if models?.length}
-		<div class="custom-dropdown">
-			<button onclick={() => select.showPicker()}>
-				<span class="text">{formatModelName(settings.lastUsedModel)}</span>
-				<span class="icon" {@attach icon('chevrons-up-down')}></span>
-			</button>
-			<select bind:this={select} bind:value={settings.lastUsedModel}> 
-				{#each models as model}
-					<option>{model.id}</option>
-				{/each}
-			</select>
-		</div>
-	{:else}
-		{@render error()}
-	{/if}
+{#await listModelsFromAllServers()}
+	<div class="connecting" {@attach tooltip("Looking for LM Studio...")}>
+		<span {@attach icon("loader")}></span>
+		Connecting...
+	</div>
+{:then results}
+	{@const serverModelPairs = results.flatMap(r => r.models.map(model => ({ server: r.server, model }))) }
+	<div class="custom-dropdown">
+		<button onclick={() => select.showPicker()}>
+			<span class="text">{settings.currentServer.name}:{settings.currentServer.lastUsedModel}</span>
+			<span class="icon" {@attach icon("chevrons-up-down")}></span>
+		</button>
+		<select bind:this={select} bind:value {onchange}>
+			{#each serverModelPairs as { server, model }}
+				<option value={{ server, model }}>{`${server.name}:${model.id}`}</option>	
+			{/each}
+		</select>
+	</div>
 {:catch}
-		{@render error()}
+	{@render error()}
 {/await}
-
 
 <style>
 	.custom-dropdown {
@@ -72,11 +96,11 @@
 	}
 
 	.custom-dropdown button {
-		position: absolute;	
+		position: absolute;
 		top: 0;
 		left: 0;
 		display: flex;
-		gap: var(--size-4-1); 
+		gap: var(--size-4-1);
 		max-width: 100%;
 		box-shadow: none;
 		color: var(--text-muted);
@@ -101,11 +125,11 @@
 		width: var(--icon-s);
 	}
 
-	select {	
-		visibility:hidden; 
+	select {
+		visibility: hidden;
 		appearance: none;
 		padding: unset;
-		height:0;	
+		height: 0;
 		/* height: unset; */
 		padding: var(--size-4-2);
 		background: var(--interactive-normal);
@@ -121,7 +145,8 @@
 		background: var(--interactive-hover);
 	}
 
-	.connecting, .error {
+	.connecting,
+	.error {
 		display: flex;
 		align-items: center;
 		align-self: flex-end;
@@ -133,15 +158,16 @@
 		align-items: center;
 	}
 
-	.connecting,.error {
+	.connecting,
+	.error {
 		gap: var(--size-4-1);
 		color: var(--text-faint);
 		font-size: var(--font-smaller);
 	}
-	
+
 	.error {
 		color: var(--text-error);
-		opacity: .8;
+		opacity: 0.8;
 	}
 
 	.connecting :global(svg) {

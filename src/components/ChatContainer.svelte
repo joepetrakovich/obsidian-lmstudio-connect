@@ -9,6 +9,7 @@
 	import { setPluginContext } from "src/services/context";
 	import EmptyView from "./EmptyView.svelte";
 	import Message from "./Message.svelte";
+	import { toV1BaseUrl } from "src/settings.svelte";
 
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
 	setPluginContext(plugin);		
@@ -16,7 +17,7 @@
 	let provider = $derived(
 		createOpenAICompatible({
 			name: "lmstudio",
-			baseURL: plugin.settings.baseURL,
+			baseURL: toV1BaseUrl(plugin.settings.currentServer),
 		}),
 	);
 
@@ -35,7 +36,7 @@
 		messages.push({ role: Role.User, status: Status.Complete, parts: [input] });
 		messages.push({ role: Role.Assistant, status: Status.Pending, parts: [] });
 		const result = streamText({
-			model: provider(plugin.settings.lastUsedModel),
+			model: provider(plugin.settings.currentServer.lastUsedModel),
 			prompt: toApiMessages(messages.slice(0,-1)),
 		});
 		input = "";
