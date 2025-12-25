@@ -12,7 +12,14 @@ export enum Role { Assistant = "assistant", User = "user" }
 export enum Status { Pending = "pending", Streaming = "streaming", Complete = "complete" }
 
 export interface ChatMessage {
-	status: Status; 
+	status: Status;
 	role: Role;
 	parts: string[]
 }
+
+export type ServerConnection = {
+	name: string;
+	url: string;
+	status: "pending" | "ok" | "error";
+	isDefault: boolean;
+};

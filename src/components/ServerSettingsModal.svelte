@@ -6,23 +6,14 @@
 	} from "src/settings.svelte";
 	import { requestUrl } from "obsidian";
 	import { icon } from "./Icon.svelte";
+	import { tooltip } from "./Tooltip.svelte";
+	import { onDestroy, tick } from "svelte";
+	import type { ServerConnection } from "src/services/models";
 
-	let {
-		settings,
-		onClose,
-		onSubmit,
-	}: {
-		settings: PluginSettings;
-		onClose: () => void;
-		onSubmit: (result: any) => void;
-	} = $props();
+	let { settings, onClose, onSubmit }: 
+		{ settings: PluginSettings; onClose: () => void; onSubmit: (result: ServerConnection[]) => void; } 
+		= $props();
 
-	type ServerConnection = {
-		name: string;
-		url: string;
-		status: "pending" | "ok" | "error";
-		isDefault: boolean;
-	};
 
 	let servers: ServerConnection[] = $state(
 		$state.snapshot(settings.servers).map((s) => {
@@ -37,15 +28,46 @@
 
 	servers.forEach(healthcheck);
 
-	let showAdditional = $state(servers.length > 1);
+	let addControlsVisible = $state(false);
+	let additionalServerName = $state("");
+	let additionalServerURL = $state("");
+
+	let form: HTMLFormElement;
+	let additionalServerNameInput: HTMLInputElement;
+
+	async function showAddControls() {
+		addControlsVisible = true;
+		await tick();
+		additionalServerNameInput.focus();
+	}
+
+	function addServer(event: Event) {
+		if (!form.checkValidity()) return;
+		event.preventDefault();
+
+		servers.push({
+			name: additionalServerName,
+			url: additionalServerURL,
+			status: "pending",
+			isDefault: false,
+		});
+
+		healthcheck(servers.last()!);
+
+		form.reset();
+		additionalServerNameInput.focus();
+	}
+
+	function removeServer(server: ServerConnection) {
+		servers.remove(server);
+		additionalServerNameInput.focus();
+	}
 
 	async function healthcheck(server: ServerConnection) {
-		console.log("hc ", server.url);
 		server.status = "pending";
 		let status = false;
 		try {
 			const resp = await requestUrl(server.url + MODELS_ENDPOINT);
-			console.log(resp.status);
 			status = resp.status == 200 ? true : false; //might return 200 when not ok tho.
 		} catch (e) {
 			console.log(e);
@@ -56,59 +78,111 @@
 
 	const debounce = (callback: (...args: any[]) => void, wait: number) => {
 		let timeoutId: NodeJS.Timeout | undefined;
-		return (...args: any[]) => {
+		const func = (...args: any[]) => {
 			clearTimeout(timeoutId);
 			timeoutId = setTimeout(() => {
 				callback(...args);
 			}, wait);
 		};
+		func.cancel = () => { clearTimeout(timeoutId); }
+
+		return func;
 	};
-	//TODO: test when we have more than 1 server
-	// this would be shared amongst each server right? unless have child components or an array.
+
 	const debouncedHealthCheck = debounce(healthcheck, 1000);
+
+	onDestroy(() => { debouncedHealthCheck.cancel() });
 </script>
 
-<div class="instructions">
-	{#if servers.length == 1}
+<div class={[addControlsVisible && "add-controls-visible"]}>
+	<div class="instructions">
 		Override the default server URL or add additional servers below.
-	{/if}
-</div>
+	</div>
 
-<div class="servers">
-	{#each servers as server}
-		<div class="server">
-			{server.name}
-			<div>
-				{#if server.status === "pending"}
-					<span {@attach icon("loader")}></span>
-				{:else}
-					<span
-						{@attach icon(
-							server.status === "ok"
-								? "circle-check"
-								: "circle-off",
-						)}
-					></span>
-				{/if}
+	<!-- svelte-ignore a11y_consider_explicit_label -->
+	<div class={["servers", servers.length > 1 && "many"]}>
+		{#each servers as server}
+			<div class={["server", server.isDefault && "default"]}>
+				<span class="name">{server.name}</span>
+				<div>
+					{#if server.status === "pending"}
+						<button
+							class="clickable-icon"
+							onclick={() => healthcheck(server)}
+							{@attach icon("loader")}
+						></button>
+					{:else}
+						<button
+							class="clickable-icon"
+							onclick={() => healthcheck(server)}
+							{@attach tooltip(
+								server.status === "ok"
+									? "LM Studio is detected at this URL."
+									: "LM Studio not found.  Is CORS enabled?",
+							)}
+							{@attach icon(
+								server.status === "ok"
+									? "circle-check"
+									: "circle-off",
+							)}
+						>
+						</button>
+					{/if}
+					<input
+						type="text"
+						bind:value={server.url}
+						oninput={() => {
+							server.status = "pending";
+							debouncedHealthCheck(server);
+						}}
+						size="22"
+						placeholder={server.isDefault
+							? DEFAULT_SERVER_URL
+							: "Example: https://0.0.0.0:1234"}
+					/>
+					<button
+						disabled={server.isDefault}
+						class="remove clickable-icon"
+						onclick={() => removeServer(server)}
+						{@attach icon("x")}
+						{@attach tooltip("Delete")}
+					></button>
+				</div>
+			</div>
+		{/each}
+
+		<div class="add-controls">
+			Server
+			<form bind:this={form} onsubmit={addServer}>
 				<input
 					type="text"
-					bind:value={server.url}
-					oninput={() => {
-						server.status = "pending";
-						debouncedHealthCheck(server);
-					}}
-					placeholder={server.isDefault
-						? DEFAULT_SERVER_URL
-						: "Example: https://0.0.0.0:1234"}
+					bind:this={additionalServerNameInput}
+					bind:value={additionalServerName}
+					size="15"
+					required
+					placeholder="Display Name"
 				/>
-			</div>
+				<input
+					type="text"
+					bind:value={additionalServerURL}
+					size="22"
+					required
+					placeholder="URL"
+				/>
+				<button onclick={addServer}>Add</button>
+			</form>
 		</div>
-	{/each}
-</div>
+	</div>
 
-<div class="modal-buttons">
-	<button class="cta" onclick={onSubmit}>Save</button>
-	<button onclick={onClose}>Cancel</button>
+	<div class="modal-buttons">
+		<button class="add-additional" onclick={showAddControls}>
+			Add additional servers
+		</button>
+		<div>
+			<button class="cta" onclick={() => onSubmit($state.snapshot(servers))}>Save</button>
+			<button onclick={onClose}>Cancel</button>
+		</div>
+	</div>
 </div>
 
 <style>
@@ -119,13 +193,32 @@
 	.servers {
 		display: flex;
 		flex-direction: column;
+		gap: var(--size-4-2);
 	}
 	.server,
-	.server > div {
+	.server > div,
+	.add-controls-visible .add-controls,
+	.add-controls-visible .add-controls > form {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
 		gap: var(--size-4-2);
+	}
+	.server.default button.remove {
+		display: none;
+	}
+	.server.default .name {
+		color: var(--text-faint);
+	}
+	.many .server.default button.remove {
+		display: inline-block;
+		visibility: hidden;
+	}
+
+	.add-controls {
+		display: none;
+		border-top: 1px solid var(--background-modifier-border);
+		padding-top: var(--size-4-2);
 	}
 
 	.server :global(svg.lucide-loader) {
@@ -139,21 +232,20 @@
 	.servers :global(svg.lucide-circle-check) {
 		color: var(--text-success);
 	}
-	/**/
-	/* .controls:not(.showAdditional) { */
-	/* 	display: none; */
-	/* } */
 
-	.modal-buttons {
+	.modal-buttons,
+	.modal-buttons > div {
 		display: flex;
-		justify-content: flex-end;
 		gap: var(--size-4-2);
 	}
-	.modal-buttons button.cta {
+	.modal-buttons {
+		justify-content: space-between;
+	}
+	.modal-buttons > div button.cta {
 		background: var(--interactive-accent);
 		color: var(--text-on-accent);
 	}
-	.modal-buttons button.cta:hover {
+	.modal-buttons > div button.cta:hover {
 		background: var(--interactive-accent-hover);
 		color: var(--text-on-accent-hover);
 	}
@@ -161,8 +253,24 @@
 	.modal-buttons,
 	.modal-buttons :global(.settings) {
 		border-top: none;
-		margin-top: 2.5em;
+		margin-top: 2.25em;
 		margin-bottom: 0;
 		padding-bottom: 0;
+	}
+	button.add-additional {
+		display: inline;
+		background: none;
+		box-shadow: none;
+		align-self: flex-start;
+		color: var(--link-color);
+		padding: var(--size-2-2) 0;
+		text-decoration: var(--link-decoration);
+	}
+	button.add-additional:hover {
+		color: var(--link-color-hover);
+		cursor: var(--cursor-link);
+	}
+	.add-controls-visible button.add-additional {
+		visibility: hidden;
 	}
 </style>
