@@ -3,6 +3,7 @@
 	import type { ModelInfo } from "../services/models";
 	import { getPluginContext } from "src/services/context";
 	import {
+		currentServer,
 		MODELS_ENDPOINT,
 		type LMStudioServer,
 		type PluginSettings,
@@ -14,7 +15,7 @@
 	const plugin: LMStudioConnectPlugin = getPluginContext();
 	const settings: PluginSettings = plugin.settings;
 	
-	let select: HTMLSelectElement;
+	let select: HTMLSelectElement | undefined = $state();
 
 	async function listModels(baseURL: String) {
 		try {
@@ -37,13 +38,13 @@
 		return Promise.allSettled(listModelsPromises).then((results) => {
 			return results.map((r, i) => ({
 				server: settings.servers[i],
+				connected: r.status === "fulfilled",
 				models: r.status === "fulfilled" ? r.value : [],
 			}));
 		});
 	});
 
-	// Model names are usually formatted like 'company/model' so truncate company
-	// if it exists.
+	// Model names are usually formatted like 'company/model' so truncate company if it exists.
 	function formatModelName(name: string) {
 		const parts = name.split("/");
 		return parts.length > 1
@@ -51,30 +52,48 @@
 			: parts[0];
 	}
 
-	//TODO: cleanup, this is all quite wonky just for multiple servers.
-	let value: { server: LMStudioServer; model: ModelInfo } | undefined =
-		$state();
+	function toKey(settings: PluginSettings) {
+		const lastUsedServer = settings.servers.find(s => s.name === settings.lastUsedServer);
+		return lastUsedServer ? JSON.stringify({ server: lastUsedServer.name, model: lastUsedServer.lastUsedModel }) : undefined;
+	}
+	
+	//TODO: handle undefined.  I dont think we want to force a selection because 
+	// it could cost user money if sent to unintended model. handle that and handle servers going down.
+	//what do? i dont think we need syncing per se. close and reopen would sync. or sync on an err?
+	function getCurrentModelName(settings: PluginSettings) {
+		const lastUsedServer = settings.servers.find(s => s.name === settings.lastUsedServer);
+		return lastUsedServer ? formatModelName(lastUsedServer.lastUsedModel) : "to do";
+	}
+
+	let value: string | undefined = $state(toKey(settings));
+
+	$effect(() => console.log("val: ", value));
+	 
 	function onchange() {
 		if (value) {
-			const { server, model } = value;
-			settings.currentServer = { ...server, lastUsedModel: model.id };
+			const key = JSON.parse(value) as { server: string, model: string };
+			
+			const server = settings.servers.find(s => s.name === key.server);
+			if (server) {
+				server.lastUsedModel = key.model;
+				settings.lastUsedServer = server.name;
+			}
+			console.log("onchange: ", value)
 		}
 	}
+	
 </script>
 
 {#snippet error()}
-	<div
-		class="error"
-		{@attach tooltip("Verify base URL and enable CORS in LM Studio")}
-	>
+	<div class="error" {@attach tooltip("Verify base URL and enable CORS in LM Studio")}>
 		<span {@attach icon("circle-off")}></span>
 		No models found
 	</div>
-{/snippet}
+{/snippet} 
 
 {#snippet modelOptions(server: LMStudioServer, models: ModelInfo[])}
 	{#each models as model}
-		<option value={{ server, model }}>
+		<option value={JSON.stringify({ server: server.name, model: model.id })}>
 			{model.id}
 		</option>
 	{/each}
@@ -86,24 +105,32 @@
 		Connecting...
 	</div>
 {:then modelsByServer}
-	{@const multiserver = modelsByServer.length > 1}
-	<div class="custom-dropdown">
-		<button onclick={() => select.showPicker()}>
-			<div class="text">
-				<span>{formatModelName(settings.currentServer.lastUsedModel)}</span>
-			</div>
-			<span class="icon" {@attach icon("chevrons-up-down")}></span>
-		</button>
-		<select bind:this={select} bind:value {onchange}>
-			{#each modelsByServer as { server, models }}
-				{#if multiserver}
-					<optgroup label={server.name}>{@render modelOptions(server, models)}</optgroup>
-				{:else}
-					{@render modelOptions(server, models)}
-				{/if}
-			{/each}
-		</select>
-	</div>
+	{#if modelsByServer.every(s => s.models.length === 0)}
+		{@render error()}
+	{:else}
+		{@const multiserver = modelsByServer.length > 1}
+		<div class="custom-dropdown">
+			<button onclick={() => select?.showPicker()}>
+				<div class="text">
+					<span>{getCurrentModelName(settings)}</span>
+				</div>
+				<span class="icon" {@attach icon("chevrons-up-down")}></span>
+			</button>
+			<select bind:this={select} bind:value {onchange}> 
+				{#each modelsByServer as { server, connected, models }}
+					{#if multiserver}
+						<optgroup 
+							label={server.name + (!connected ? ' (disconnected)':'')}
+							disabled={!connected}>
+							{@render modelOptions(server, models)}
+						</optgroup>
+					{:else}
+						{@render modelOptions(server, models)}
+					{/if}
+				{/each}
+			</select>
+		</div>
+	{/if}
 {:catch}
 	{@render error()}
 {/await}
@@ -150,7 +177,7 @@
 		appearance: none;
 		padding: unset;
 		height: 0;
-		/* height: unset; */
+		height: unset;
 		padding: var(--size-4-2);
 		background: var(--interactive-normal);
 		box-shadow: none;

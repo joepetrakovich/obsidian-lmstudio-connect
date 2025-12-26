@@ -1,6 +1,6 @@
 <script lang="ts">
 	import {
-		DEFAULT_SERVER_URL,
+	DEFAULT_SERVER_URL,
 		MODELS_ENDPOINT,
 		type PluginSettings,
 	} from "src/settings.svelte";

@@ -9,15 +9,25 @@
 	import { setPluginContext } from "src/services/context";
 	import EmptyView from "./EmptyView.svelte";
 	import Message from "./Message.svelte";
-	import { toV1BaseUrl } from "src/settings.svelte";
+	import { currentServer, toV1BaseURL } from "src/settings.svelte";
 
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
 	setPluginContext(plugin);		
 
+	let server = $derived(currentServer(plugin.settings));
+	let baseURL = $derived(server ? toV1BaseURL(server.url) : '');
+	let model = $derived(server?.lastUsedModel ?? '');
+
+	$effect(() => {
+		console.log("server: ", JSON.stringify(server));
+		console.log("baseURL: ", baseURL);
+		console.log("model: ", model);
+	});
+
 	let provider = $derived(
 		createOpenAICompatible({
 			name: "lmstudio",
-			baseURL: toV1BaseUrl(plugin.settings.currentServer),
+			baseURL
 		}),
 	);
 
@@ -36,7 +46,7 @@
 		messages.push({ role: Role.User, status: Status.Complete, parts: [input] });
 		messages.push({ role: Role.Assistant, status: Status.Pending, parts: [] });
 		const result = streamText({
-			model: provider(plugin.settings.currentServer.lastUsedModel),
+			model: provider(model), 
 			prompt: toApiMessages(messages.slice(0,-1)),
 		});
 		input = "";

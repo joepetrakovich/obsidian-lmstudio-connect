@@ -5,7 +5,7 @@ import { mount, unmount, untrack } from "svelte";
 import type { ServerConnection } from "./services/models";
 
 export interface PluginSettings {
-	currentServer: LMStudioServer;
+	lastUsedServer: string;
 	servers: LMStudioServer[];
 }
 
@@ -15,13 +15,14 @@ export interface LMStudioServer {
 	lastUsedModel: string
 }
 
-export const DEFAULT_SERVER_URL = 'http://127.0.0.1:1234';
 export const MODELS_ENDPOINT = '/v1/models';
-export const toV1BaseUrl = (server: LMStudioServer): string => { return server.url + '/v1' }
-
-const defaultServer = { name: 'default', url: DEFAULT_SERVER_URL, lastUsedModel: '' };
-export const DEFAULT_SETTINGS: Partial<PluginSettings> = {
-	servers: [defaultServer]
+export const toV1BaseURL = (url: string) => url + '/v1';
+export const currentServer = (settings: PluginSettings) => settings.servers.find(s => s.name === settings.lastUsedServer);
+export const DEFAULT_SERVER_URL = 'http://127.0.0.1:1234';
+const DEFAULT_SERVER: LMStudioServer = { name: 'default', url: DEFAULT_SERVER_URL, lastUsedModel: '' };
+const DEFAULT_SETTINGS: Partial<PluginSettings> = {
+	lastUsedServer: DEFAULT_SERVER.name,
+	servers: [DEFAULT_SERVER]
 }
 
 type PersistenceConfig = { save: (data: any) => Promise<void>, load: () => Promise<any> };
@@ -39,11 +40,11 @@ export async function createSettings(persistence: PersistenceConfig) {
 				defaultServer.url = DEFAULT_SERVER_URL;
 			}
 		} else {
-			saved.servers.push({ name: 'default', url: DEFAULT_SERVER_URL, lastUsedModel: '' });
+			saved.servers.push(DEFAULT_SERVER);
 		}
 		
-		// remove trailing slashes
-		saved.servers.forEach(s => s.url = s.url.replace(/\/+$/, ''));
+		// remove whitespace and trailing slashes
+		saved.servers.forEach(s => s.url = s.url.trim().replace(/\/+$/, ''));
 
 		return saved;
 	});
