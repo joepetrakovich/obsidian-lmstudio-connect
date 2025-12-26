@@ -1,6 +1,6 @@
 <script lang="ts">
 	import {
-	DEFAULT_SERVER_URL,
+		DEFAULT_SERVER_URL,
 		MODELS_ENDPOINT,
 		type PluginSettings,
 	} from "src/settings.svelte";
@@ -10,10 +10,15 @@
 	import { onDestroy, tick } from "svelte";
 	import type { ServerConnection } from "src/services/models";
 
-	let { settings, onClose, onSubmit }: 
-		{ settings: PluginSettings; onClose: () => void; onSubmit: (result: ServerConnection[]) => void; } 
-		= $props();
-
+	let {
+		settings,
+		onClose,
+		onSubmit,
+	}: {
+		settings: PluginSettings;
+		onClose: () => void;
+		onSubmit: (result: ServerConnection[]) => void;
+	} = $props();
 
 	let servers: ServerConnection[] = $state(
 		$state.snapshot(settings.servers).map((s) => {
@@ -41,7 +46,21 @@
 		additionalServerNameInput.focus();
 	}
 
+
+	function ensureUniqueNonEmptyName() {
+		additionalServerNameInput.setCustomValidity("")
+		additionalServerNameInput.value = additionalServerNameInput.value.trim();
+		if (!additionalServerNameInput.validity.valid) {
+			return;
+		}
+		
+		if (servers.some(s => s.name.toLowerCase() === additionalServerNameInput.value.toLowerCase())) {
+			additionalServerNameInput.setCustomValidity("Please use a unique name.");
+		}
+	}
+
 	function addServer(event: Event) {
+		ensureUniqueNonEmptyName();	
 		if (!form.checkValidity()) return;
 		event.preventDefault();
 
@@ -84,14 +103,18 @@
 				callback(...args);
 			}, wait);
 		};
-		func.cancel = () => { clearTimeout(timeoutId); }
+		func.cancel = () => {
+			clearTimeout(timeoutId);
+		};
 
 		return func;
 	};
 
 	const debouncedHealthCheck = debounce(healthcheck, 1000);
 
-	onDestroy(() => { debouncedHealthCheck.cancel() });
+	onDestroy(() => {
+		debouncedHealthCheck.cancel();
+	});
 </script>
 
 <div class={[addControlsVisible && "add-controls-visible"]}>
@@ -179,7 +202,10 @@
 			Add additional servers
 		</button>
 		<div>
-			<button class="cta" onclick={() => onSubmit($state.snapshot(servers))}>Save</button>
+			<button
+				class="cta"
+				onclick={() => onSubmit($state.snapshot(servers))}>Save</button
+			>
 			<button onclick={onClose}>Cancel</button>
 		</div>
 	</div>
