@@ -3,8 +3,8 @@
 	import type { ModelInfo } from "../services/models";
 	import { getPluginContext } from "src/services/context";
 	import {
-		currentServer,
 		MODELS_ENDPOINT,
+		serverRefreshRequest,
 		type LMStudioServer,
 		type PluginSettings,
 	} from "src/settings.svelte";
@@ -14,7 +14,7 @@
 
 	const plugin: LMStudioConnectPlugin = getPluginContext();
 	const settings: PluginSettings = plugin.settings;
-	
+
 	let select: HTMLSelectElement | undefined = $state();
 
 	async function listModels(baseURL: String) {
@@ -32,6 +32,7 @@
 	}
 
 	let listModelsFromAllServers = $derived(async () => {
+		serverRefreshRequest.watch;
 		const listModelsPromises = settings.servers.map((s) =>
 			listModels(s.url),
 		);
@@ -53,47 +54,58 @@
 	}
 
 	function toKey(settings: PluginSettings) {
-		const lastUsedServer = settings.servers.find(s => s.name === settings.lastUsedServer);
-		return lastUsedServer ? JSON.stringify({ server: lastUsedServer.name, model: lastUsedServer.lastUsedModel }) : undefined;
+		const lastUsedServer = settings.servers.find(
+			(s) => s.name === settings.lastUsedServer,
+		);
+		return lastUsedServer
+			? JSON.stringify({
+					server: lastUsedServer.name,
+					model: lastUsedServer.lastUsedModel,
+				})
+			: undefined;
 	}
-	
-	//TODO: handle undefined.  I dont think we want to force a selection because 
-	// it could cost user money if sent to unintended model. handle that and handle servers going down.
-	//what do? i dont think we need syncing per se. close and reopen would sync. or sync on an err?
+
 	function getCurrentModelName(settings: PluginSettings) {
-		const lastUsedServer = settings.servers.find(s => s.name === settings.lastUsedServer);
-		return lastUsedServer ? formatModelName(lastUsedServer.lastUsedModel) : "to do";
+		const lastUsedServer = settings.servers.find(
+			(s) => s.name === settings.lastUsedServer,
+		);
+		return lastUsedServer?.lastUsedModel
+			? formatModelName(lastUsedServer.lastUsedModel)
+			: "Choose a model...";
 	}
 
 	let value: string | undefined = $state(toKey(settings));
 
-	$effect(() => console.log("val: ", value));
-	 
 	function onchange() {
 		if (value) {
-			const key = JSON.parse(value) as { server: string, model: string };
-			
-			const server = settings.servers.find(s => s.name === key.server);
+			const key = JSON.parse(value) as { server: string; model: string };
+
+			const server = settings.servers.find((s) => s.name === key.server);
 			if (server) {
 				server.lastUsedModel = key.model;
 				settings.lastUsedServer = server.name;
 			}
-			console.log("onchange: ", value)
 		}
 	}
-	
 </script>
 
 {#snippet error()}
-	<div class="error" {@attach tooltip("Verify base URL and enable CORS in LM Studio")}>
+	<div
+		class="error"
+		{@attach tooltip(
+			"Verify base URL in plugin settings and ensure LM Studio server is running and CORS is enabled.",
+		)}
+	>
 		<span {@attach icon("circle-off")}></span>
 		No models found
 	</div>
-{/snippet} 
+{/snippet}
 
 {#snippet modelOptions(server: LMStudioServer, models: ModelInfo[])}
 	{#each models as model}
-		<option value={JSON.stringify({ server: server.name, model: model.id })}>
+		<option
+			value={JSON.stringify({ server: server.name, model: model.id })}
+		>
 			{model.id}
 		</option>
 	{/each}
@@ -105,7 +117,7 @@
 		Connecting...
 	</div>
 {:then modelsByServer}
-	{#if modelsByServer.every(s => s.models.length === 0)}
+	{#if modelsByServer.every((s) => s.models.length === 0)}
 		{@render error()}
 	{:else}
 		{@const multiserver = modelsByServer.length > 1}
@@ -116,12 +128,14 @@
 				</div>
 				<span class="icon" {@attach icon("chevrons-up-down")}></span>
 			</button>
-			<select bind:this={select} bind:value {onchange}> 
+			<select bind:this={select} bind:value {onchange}>
 				{#each modelsByServer as { server, connected, models }}
 					{#if multiserver}
-						<optgroup 
-							label={server.name + (!connected ? ' (disconnected)':'')}
-							disabled={!connected}>
+						<optgroup
+							label={server.name +
+								(!connected ? " (disconnected)" : "")}
+							disabled={!connected}
+						>
 							{@render modelOptions(server, models)}
 						</optgroup>
 					{:else}

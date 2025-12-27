@@ -2,6 +2,7 @@
 	import {
 		DEFAULT_SERVER_URL,
 		MODELS_ENDPOINT,
+		requestServerRefresh,
 		type PluginSettings,
 	} from "src/settings.svelte";
 	import { requestUrl } from "obsidian";
@@ -39,6 +40,8 @@
 
 	let form: HTMLFormElement;
 	let additionalServerNameInput: HTMLInputElement;
+	let additionalServerURLInput: HTMLInputElement;
+	let showCORStip = $state(false);
 
 	async function showAddControls() {
 		addControlsVisible = true;
@@ -58,9 +61,19 @@
 			additionalServerNameInput.setCustomValidity("Please use a unique name.");
 		}
 	}
+	
+	function ensureNonEmptyURL() {
+		additionalServerURLInput.setCustomValidity("");
+		additionalServerURL = additionalServerURL.trim().replace(/\/+$/, '');
+		if (!additionalServerURLInput.validity.valid) {
+			return;
+		}
+	}
 
 	function addServer(event: Event) {
-		ensureUniqueNonEmptyName();	
+		ensureUniqueNonEmptyName();
+		ensureNonEmptyURL();
+
 		if (!form.checkValidity()) return;
 		event.preventDefault();
 
@@ -84,15 +97,18 @@
 
 	async function healthcheck(server: ServerConnection) {
 		server.status = "pending";
-		let status = false;
+		let ok = false;
 		try {
 			const resp = await requestUrl(server.url + MODELS_ENDPOINT);
-			status = resp.status == 200 ? true : false; //might return 200 when not ok tho.
+			ok = resp.status == 200 ? true : false; //might return 200 when not ok tho.
 		} catch (e) {
 			console.log(e);
 		}
+		
+		showCORStip = showCORStip || !ok;
+		requestServerRefresh();
 
-		server.status = status ? "ok" : "error";
+		server.status = ok ? "ok" : "error";
 	}
 
 	const debounce = (callback: (...args: any[]) => void, wait: number) => {
@@ -120,6 +136,9 @@
 <div class={[addControlsVisible && "add-controls-visible"]}>
 	<div class="instructions">
 		Override the default server URL or add additional servers below.
+		{#if showCORStip}
+			<span class="tip">Make sure the server is running and the <em>CORS option</em> is enabled.</span>
+		{/if}
 	</div>
 
 	<!-- svelte-ignore a11y_consider_explicit_label -->
@@ -141,7 +160,7 @@
 							{@attach tooltip(
 								server.status === "ok"
 									? "LM Studio is detected at this URL."
-									: "LM Studio not found.  Is CORS enabled?",
+									: "LM Studio not found.  Is the server running with CORS enabled?",
 							)}
 							{@attach icon(
 								server.status === "ok"
@@ -161,7 +180,7 @@
 						size="22"
 						placeholder={server.isDefault
 							? DEFAULT_SERVER_URL
-							: "Example: https://0.0.0.0:1234"}
+							: "Example: http://0.0.0.0:1"}
 					/>
 					<button
 						disabled={server.isDefault}
@@ -187,6 +206,7 @@
 				/>
 				<input
 					type="text"
+					bind:this={additionalServerURLInput}
 					bind:value={additionalServerURL}
 					size="22"
 					required
@@ -214,6 +234,10 @@
 <style>
 	.instructions {
 		padding-bottom: 2em;
+	}
+	.tip em {
+		color: var(--text-warning);
+		font-style: normal;
 	}
 
 	.servers {

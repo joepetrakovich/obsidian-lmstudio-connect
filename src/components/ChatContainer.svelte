@@ -9,57 +9,78 @@
 	import { setPluginContext } from "src/services/context";
 	import EmptyView from "./EmptyView.svelte";
 	import Message from "./Message.svelte";
-	import { currentServer, toV1BaseURL } from "src/settings.svelte";
+	import {
+		currentServer,
+		requestServerRefresh,
+		toV1BaseURL,
+	} from "src/settings.svelte";
+	import ErrorMessage from "./ErrorMessage.svelte";
 
 	let { plugin }: { plugin: LMStudioConnectPlugin } = $props();
-	setPluginContext(plugin);		
+	setPluginContext(plugin);
 
 	let server = $derived(currentServer(plugin.settings));
-	let baseURL = $derived(server ? toV1BaseURL(server.url) : '');
-	let model = $derived(server?.lastUsedModel ?? '');
-
-	$effect(() => {
-		console.log("server: ", JSON.stringify(server));
-		console.log("baseURL: ", baseURL);
-		console.log("model: ", model);
-	});
+	let baseURL = $derived(server ? toV1BaseURL(server.url) : "");
+	let model = $derived(server?.lastUsedModel ?? "");
 
 	let provider = $derived(
 		createOpenAICompatible({
 			name: "lmstudio",
-			baseURL
+			baseURL,
 		}),
 	);
 
 	let input = $state("");
 	let messages: ChatMessage[] = $state([]);
 	let bufferHeight = $state(0);
-
+	let errorMessage = $state("");
 	let messagesContainer: HTMLUListElement;
+
 	const gap = 20;
 
 	function toApiMessages(messages: ChatMessage[]): ModelMessage[] {
-		return messages.map(m => ({ role: m.role, content: m.parts.join('') }));
+		return messages.map((m) => ({
+			role: m.role,
+			content: m.parts.join(""),
+		}));
 	}
 
 	async function send() {
-		messages.push({ role: Role.User, status: Status.Complete, parts: [input] });
-		messages.push({ role: Role.Assistant, status: Status.Pending, parts: [] });
+		errorMessage = "";
+		messages.push({
+			role: Role.User,
+			status: Status.Complete,
+			parts: [input],
+		});
+		messages.push({
+			role: Role.Assistant,
+			status: Status.Pending,
+			parts: [],
+		});
 		const result = streamText({
-			model: provider(model), 
-			prompt: toApiMessages(messages.slice(0,-1)),
+			model: provider(model),
+			prompt: toApiMessages(messages.slice(0, -1)),
+			onError({ error }) {
+				console.error(error);
+				messages = messages.slice(0, -1);
+				errorMessage = "Something went wrong.  Is LM Studio connected?";
+				requestServerRefresh();
+			},
 		});
 		input = "";
-			
-		// push user message to top. $effect?
-		await tick();	
-		const lastUserMessage = messagesContainer.children[messages.length-2];
-		bufferHeight = messagesContainer.clientHeight - (lastUserMessage?.clientHeight ?? 0) - gap; 
+
+		await tick();
+		const lastUserMessage = messagesContainer.children[messages.length - 2];
+		bufferHeight =
+			messagesContainer.clientHeight -
+			(lastUserMessage?.clientHeight ?? 0) -
+			gap;
 
 		const response = messages[messages.length - 1];
 		for await (const textPart of result.textStream) {
 			response.parts.push(textPart);
-			if (response.status === Status.Pending) response.status = Status.Streaming;	
+			if (response.status === Status.Pending)
+				response.status = Status.Streaming;
 		}
 		response.status = Status.Complete;
 	}
@@ -68,25 +89,34 @@
 		e.preventDefault();
 		messages = [];
 	}
+
+	function resend() {
+		requestServerRefresh();
+		const lastUserMessage = messages.last()?.parts.first() || "";
+		input = lastUserMessage;
+		messages = messages.slice(0, -1);
+		send();
+	}
 </script>
 
 <div class="container">
 	<TopToolbar onclear={clearMessages} />
 
-	<ul bind:this={messagesContainer} style="--buffer-height: {bufferHeight}px">
-		{#if messages.length}
+	{#if messages.length}
+		<ul bind:this={messagesContainer} style="--buffer-height: {bufferHeight}px">
 			{#each messages as message}
 				<Message {message} />
 			{/each}
-		{:else}
-			<EmptyView />
-		{/if}
-	</ul>
 
-	<ChatInput
-		bind:input
-		onsend={send}
-	/>
+			{#if errorMessage}
+				<ErrorMessage message={errorMessage} onretry={resend} />
+			{/if}
+		</ul>
+	{:else}
+		<EmptyView />
+	{/if}
+
+	<ChatInput bind:input onsend={send} />
 </div>
 
 <style>
@@ -108,5 +138,4 @@
 		padding: 0;
 		margin: var(--size-4-1) 0;
 	}
-
 </style>

@@ -24,6 +24,8 @@ const DEFAULT_SETTINGS: Partial<PluginSettings> = {
 	lastUsedServer: DEFAULT_SERVER.name,
 	servers: [DEFAULT_SERVER]
 }
+export const serverRefreshRequest = $state({ watch: 0 });
+export function requestServerRefresh() { serverRefreshRequest.watch += 1; }
 
 type PersistenceConfig = { save: (data: any) => Promise<void>, load: () => Promise<any> };
 
@@ -113,6 +115,8 @@ export class SettingsTab extends PluginSettingTab {
 
 							current.filter(c => !servers.find(s => s.name === c.name))
 								.forEach(f => current.remove(f));
+
+							requestServerRefresh()
 						}
 					).open();
 				})
@@ -142,7 +146,6 @@ export class LMStudioServerSettingsModal extends Modal {
 	onClose() {
 		if (this.settingsComponent) {
 			unmount(this.settingsComponent);
-			console.log("unmounted");
 		}
 	}
 }
