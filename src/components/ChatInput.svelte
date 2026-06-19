@@ -244,6 +244,9 @@
 		border: var(--border-width) solid var(--background-modifier-border);
 		border-radius: var(--radius-s);
 		padding: 0 var(--size-4-2) var(--size-4-2) var(--size-4-2);
+	}
+
+	:global(.theme-light) .chatbox {
 		background: var(--background-primary-alt);
 	}
 
@@ -344,17 +347,13 @@
 		height: var(--icon-xs);
 	}
 
-	.right button {
-		aspect-ratio: 1;
-		corner-shape: round;
-	}
-
 	button.addFileRef {
 		border-radius: 50%;
 		box-shadow: none;
 		padding: var(--size-2-2) var(--size-2-3);
 		background-color: transparent;
 		aspect-ratio: 1 / 1;
+		corner-shape: round;
 	}
 	button.addFileRef:hover {
 		background-color: var(--interactive-hover);

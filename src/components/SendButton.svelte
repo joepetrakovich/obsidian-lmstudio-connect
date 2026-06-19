@@ -23,6 +23,7 @@
 		box-shadow: none;
 		padding: var(--size-2-2) var(--size-2-3);
 		aspect-ratio: 1 / 1;
+		corner-shape: round;
 	}
 	button.send:enabled {
 		background-color: var(--interactive-accent);
