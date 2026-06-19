@@ -244,6 +244,7 @@
 		border: var(--border-width) solid var(--background-modifier-border);
 		border-radius: var(--radius-s);
 		padding: 0 var(--size-4-2) var(--size-4-2) var(--size-4-2);
+		background: var(--background-primary-alt);
 	}
 
 	@container (min-width: 400px) {
@@ -313,6 +314,9 @@
 	.editor :global(.cm-editor.cm-focused ::selection) {
 		background-color: var(--text-selection);
 	}
+	.editor :global(.cm-editor.cm-focused) {
+		outline: none;
+	}
 
 	.editor :global(.cm-editor .cm-unresolved-file-ref-highlight) {
 		color: var(--link-unresolved-color);
@@ -342,6 +346,7 @@
 
 	.right button {
 		aspect-ratio: 1;
+		corner-shape: round;
 	}
 
 	button.addFileRef {
