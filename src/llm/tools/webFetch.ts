@@ -45,7 +45,7 @@ export const createWebFetchTool = () => {
 			const timeout = Math.min((params.timeout ?? DEFAULT_TIMEOUT / 1000) * 1000, MAX_TIMEOUT)
 
 			const controller = new AbortController()
-			const timeoutId = activeWindow.setTimeout(() => controller.abort(), timeout)
+			const timeoutId = window.setTimeout(() => controller.abort(), timeout)
 
 			// Build Accept header based on requested format with q parameters for fallbacks
 			let acceptHeader = "*/*"
@@ -74,7 +74,7 @@ export const createWebFetchTool = () => {
 				}
 			});
 
-			activeWindow.clearTimeout(timeoutId)
+			window.clearTimeout(timeoutId)
 
 			if (response.status >= 400) {
 				throw new Error(`Request failed with status code: ${response.status}`)
