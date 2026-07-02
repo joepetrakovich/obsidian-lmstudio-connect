@@ -20,4 +20,4 @@ void i18n.init({
 	},
 });
 
-export const t: typeof i18n.t = i18n.t.bind(i18n);
+export const t = i18n.t.bind(i18n) as typeof i18n.t;

@@ -14,8 +14,8 @@ export default class LMStudioConnectPlugin extends Plugin {
 
 	async onload() {
 		const { settings, dispose } = await createSettings({
-			save: this.saveData.bind(this),
-			load: this.loadData.bind(this)
+			save: (data: PluginSettings) => this.saveData(data),
+			load: () => this.loadData(),
 		});
 		this.settings = settings;
 		this.unloadSettings = dispose;

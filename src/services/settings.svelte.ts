@@ -14,7 +14,7 @@ export interface LMStudioServer {
 export const MODELS_ENDPOINT = '/v1/models';
 export const DEFAULT_SERVER_URL = 'http://127.0.0.1:1234';
 const DEFAULT_SERVER: LMStudioServer = { name: 'default', url: DEFAULT_SERVER_URL, lastUsedModel: '' };
-const DEFAULT_SETTINGS: Partial<PluginSettings> = {
+const DEFAULT_SETTINGS: PluginSettings = {
 	lastUsedServer: DEFAULT_SERVER.name,
 	servers: [DEFAULT_SERVER]
 }
@@ -26,7 +26,7 @@ type PersistenceConfig = { save: (data: PluginSettings) => Promise<void>, load: 
 
 // Creates settings that auto-persist when modified using a provided save function.
 export async function createSettings(persistence: PersistenceConfig) {
-	let settings: PluginSettings = $state(Object.assign(DEFAULT_SETTINGS));
+	let settings: PluginSettings = $state({ ...DEFAULT_SETTINGS });
 	// ensure proper url format and that default server isn't removed
 	const guardedSettings: PluginSettings = $derived.by(() => {
 		const saved = Object.assign({}, settings);
