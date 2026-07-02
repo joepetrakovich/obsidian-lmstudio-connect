@@ -15,6 +15,7 @@
 	import ExchangeView from "./Exchange.svelte";
 	import { setPluginContext } from "src/services/context";
 	import { createReadFileTool } from "src/llm/tools/readFile";
+	import { createListFilesTool } from "src/llm/tools/listFiles";
 	import { createWebFetchTool } from "src/llm/tools/webFetch";
 	import { systemPrompt, } from "src/llm/prompts";
 	import CancelButton from "./CancelButton.svelte";
@@ -62,10 +63,11 @@
 			model: provider(modelStore.currentModel),
 			system: systemPrompt,
 			messages: toApiMessages(plugin, [exchange]),
-			tools: {
-				readFile: createReadFileTool(plugin),
-				webFetch: createWebFetchTool(),
-			},
+		tools: {
+			readFile: createReadFileTool(plugin),
+			listFiles: createListFilesTool(plugin),
+			webFetch: createWebFetchTool(),
+		},
 			stopWhen: stepCountIs(5),
 			onStepFinish({ staticToolCalls }) {
 				for (const call of staticToolCalls) {

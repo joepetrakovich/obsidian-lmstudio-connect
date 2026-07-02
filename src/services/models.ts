@@ -3,6 +3,7 @@
 import * as z from "zod";
 import type { AssistantModelMessage, ModelMessage, ToolModelMessage } from "ai";
 import type { ReadFileInput } from "src/llm/tools/readFile";
+import type { ListFilesInput } from "src/llm/tools/listFiles";
 import type { WebFetchInput } from "src/llm/tools/webFetch";
 import { createCurrentNotesPrompt, createUserPrompt } from "src/llm/prompts";
 import { getOpenFiles } from "src/services/obsidian-utils";
@@ -31,6 +32,7 @@ export interface InputValue { text: string, markdownFiles?: string[], display: s
 
 export interface ToolInputs {
 	readFile: ReadFileInput;
+	listFiles: ListFilesInput;
 	webFetch: WebFetchInput;
 }
 export type ToolCallMessage = {

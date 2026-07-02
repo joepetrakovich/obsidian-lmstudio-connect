@@ -41,6 +41,7 @@
   "messages": {
 	  "tool-call": {
 		  "readFile": "已读取 {{filePath}}",
+		  "listFiles": "已列出 {{folderPath}}",
           "webFetch": "正在浏览 {{url}}"
 	   }
   },

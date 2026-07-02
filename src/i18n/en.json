@@ -40,8 +40,9 @@
   },
   "messages": {
 	  "tool-call": {
-		  "readFile": "Read {{filePath}}",
-		  "webFetch": "Browsing {{url}}"
+	  "readFile": "Read {{filePath}}",
+	  "listFiles": "Listed {{folderPath}}",
+	  "webFetch": "Browsing {{url}}"
 	   }
   },
   "modelPicker": {

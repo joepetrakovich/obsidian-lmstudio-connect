@@ -16,6 +16,7 @@
 	import EmptyView from "./EmptyView.svelte";
 	import ChatInput from "./ChatInput.svelte";
 	import { createReadFileTool } from "src/llm/tools/readFile";
+	import { createListFilesTool } from "src/llm/tools/listFiles";
 	import { createWebFetchTool } from "src/llm/tools/webFetch";
 	import { systemPrompt } from "src/llm/prompts";
 	import TopToolbar from "./TopToolbar.svelte";
@@ -75,10 +76,11 @@
 			model: provider(modelStore.currentModel),
 			system: systemPrompt,
 			messages: toApiMessages(plugin, exchanges),
-			tools: {
-				readFile: createReadFileTool(plugin),
-				webFetch: createWebFetchTool()
-			},
+		tools: {
+			readFile: createReadFileTool(plugin),
+			listFiles: createListFilesTool(plugin),
+			webFetch: createWebFetchTool()
+		},
 			stopWhen: stepCountIs(5),
 			onStepFinish({ staticToolCalls }) {
 				for (const call of staticToolCalls) {
