@@ -81,7 +81,7 @@
 			listFiles: createListFilesTool(plugin),
 			webFetch: createWebFetchTool()
 		},
-			stopWhen: stepCountIs(5),
+			stopWhen: stepCountIs(20),
 			onStepFinish({ staticToolCalls }) {
 				for (const call of staticToolCalls) {
 					currentExchange?.response.messages.push({
