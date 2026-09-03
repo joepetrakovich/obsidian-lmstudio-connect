@@ -19,7 +19,7 @@ export default class LMStudioConnectPlugin extends Plugin {
 		});
 		this.settings = settings;
 		this.unloadSettings = dispose;
-		this.modelStore = new ModelStore(settings);
+		this.modelStore = new ModelStore(this.app, settings);
 
 		this.addSettingTab(new SettingsTab(this.app, this));
 

@@ -20,6 +20,7 @@ export interface ModelInfo {
 export type ServerConnection = {
 	name: string;
 	url: string;
+	apiKey: string;
 	status: "pending" | "ok" | "error";
 	isDefault: boolean;
 };

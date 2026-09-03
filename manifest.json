@@ -2,7 +2,7 @@
 	"id": "lm-studio-connect",
 	"name": "LM Studio Connect",
 	"version": "1.7.8",
-	"minAppVersion": "1.12.7",
+	"minAppVersion": "1.13.0",
 	"description": "Adds an AI chat interface that connects to LM Studio so you can chat with your notes privately and offline.",
 	"author": "Joe Petrakovich",
 	"authorUrl": "https://joe.ptrkv.ch/about",

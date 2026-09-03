@@ -9,16 +9,22 @@
   "settings": {
     "serverName": "LM Studioのサーバー",
     "serverDescription": "1つまたは複数のサーバーへの接続を設定します。",
-    "manage": "管理"
+    "manage": "管理",
+    "serversHeading": "LM Studioサーバー",
+    "addServer": "サーバーを追加"
   },
   "serverModal": {
     "instructions": "デフォルトのサーバーURLを上書きするか、以下にサーバーを追加してください。",
     "corsTip": "サーバーが起動しており、<em>CORSオプション</em>が有効になっていることを確認してください。",
-    "serverConnected": "このURLでLM Studioが検出されました。",
-    "serverDisconnected": "LM Studioが見つかりません。サーバーはCORSを有効にして起動していますか？",
+    "serverConnected": "LM Studioが検出されました。",
+    "serverDisconnected": "LM Studioが見つかりません。",
+    "corsEnabled": "CORSは有効ですか？",
+    "urlCorrect": "URLは正しいですか？",
+    "unauthorized": "アクセス拒否。",
+    "needApiKey": "APIキーが必要ですか？",
+    "modelsFound_other": "{{count}}個のモデルが見つかりました。",
     "urlPlaceholder": "例: http://0.0.0.0:1",
     "server": "サーバー",
-    "displayNamePlaceholder": "表示名",
     "urlInputPlaceholder": "URL",
     "add": "追加",
     "addAdditionalServers": "サーバーを追加",
@@ -27,7 +33,20 @@
     "delete": "削除",
     "disconnected": "未接続",
 	"default": "デフォルト",
-    "uniqueNameError": "一意の名前を入力してください。"
+    "uniqueNameError": "一意の名前を入力してください",
+    "editTitle": "LM Studioサーバーの編集",
+    "displayName": "表示名",
+    "displayNameDesc": "サーバーを一意に識別するための名前を入力してください。",
+    "urlDesc": "ポート番号が使用されている場合、それを含むサーバーURLです。",
+    "apiKey": "APIキー",
+    "optional": "オプション",
+    "testConnection": "接続テスト",
+    "nameRequired": "名前を入力してください",
+    "urlRequired": "URLを入力してください",
+    "connecting": "接続中です...",
+    "editServer": "サーバーを編集",
+    "deleteServer": "サーバーを削除",
+    "addTitle": "LM Studioサーバーを追加する"
   },
   "chat": {
     "placeholder": "モデルにメッセージを送信...",

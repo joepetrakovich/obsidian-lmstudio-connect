@@ -2,9 +2,37 @@ span.lmsc-icon {
 	display: flex;
 	align-items: center;
 }
-
 div.lmsc.container {
 	user-select: text;
+}
+.lmsc-server-list .setting-item-description.uses-key {
+	display: flex;
+	gap:0.24em; 
+	--icon-size: 12px;
+}
+.lmsc-server-list .setting-item-name {
+	display: flex;
+	align-items: center;
+	gap: 0.36em;
+}
+.lmsc-server-list .lmsc-server-status {
+	--icon-size: 14px;
+}
+.lmsc-settings svg.lucide-loader,
+.lmsc-add-server-modal svg.lucide-loader {
+	animation: spin 2s linear infinite;
+}
+.lmsc-text-error {
+  color: var(--text-error);
+}
+.lmsc-text-warning {
+  color: var(--text-warning);
+}
+.lmsc-text-success {
+  color: var(--text-success);
+}
+.lmsc-text-muted {
+  color: var(--text-muted);
 }
 
 @keyframes spin {

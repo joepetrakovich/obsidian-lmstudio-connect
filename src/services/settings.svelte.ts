@@ -8,12 +8,14 @@ export interface PluginSettings {
 export interface LMStudioServer {
 	name: string;
 	url: string;
+	apiKey: string;
 	lastUsedModel: string
 }
 
 export const MODELS_ENDPOINT = '/v1/models';
 export const DEFAULT_SERVER_URL = 'http://127.0.0.1:1234';
-const DEFAULT_SERVER: LMStudioServer = { name: 'default', url: DEFAULT_SERVER_URL, lastUsedModel: '' };
+export const DEFAULT_SERVER_NAME = 'default';
+const DEFAULT_SERVER: LMStudioServer = { name: DEFAULT_SERVER_NAME, url: DEFAULT_SERVER_URL, apiKey: '', lastUsedModel: '' };
 const DEFAULT_SETTINGS: PluginSettings = {
 	lastUsedServer: DEFAULT_SERVER.name,
 	servers: [DEFAULT_SERVER]
@@ -31,10 +33,11 @@ export async function createSettings(persistence: PersistenceConfig) {
 	const guardedSettings: PluginSettings = $derived.by(() => {
 		const saved = Object.assign({}, settings);
 
-		const defaultServer = saved.servers.find(s => s.name === 'default');
+		const defaultServer = saved.servers.find(s => s.name === DEFAULT_SERVER.name);
 		if (defaultServer) {
 			if (defaultServer.url.trim() === '') {
 				defaultServer.url = DEFAULT_SERVER_URL;
+				defaultServer.apiKey = '';
 			}
 		} else {
 			saved.servers.push(DEFAULT_SERVER);
@@ -51,6 +54,8 @@ export async function createSettings(persistence: PersistenceConfig) {
 		.load()
 		.then(initial => {
 			settings = Object.assign({}, DEFAULT_SETTINGS, initial);
+			// backfill fields added after a server was first saved (missing keys from older data.json)
+			settings.servers = settings.servers.map(s => ({ ...DEFAULT_SERVER, ...s }));
 			destroy = $effect.root(() => {
 				$effect(() => {
 					void persistence.save(guardedSettings);

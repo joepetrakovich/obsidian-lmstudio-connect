@@ -1,4 +1,4 @@
-import { requestUrl } from "obsidian";
+import { App, requestUrl } from "obsidian";
 import { MODELS_ENDPOINT, type LMStudioServer, type PluginSettings } from "src/services/settings.svelte";
 import type { ModelInfo } from "./models";
 
@@ -9,6 +9,7 @@ import type { ModelInfo } from "./models";
 * synced with settings.
 **/
 export class ModelStore {
+	private _app: App;
 	private _settings: PluginSettings;
 	private _currentServer: LMStudioServer | undefined = $state();
 	private _currentModel = $state("");
@@ -16,7 +17,8 @@ export class ModelStore {
 
 	currentBaseUrl: string = $derived(this._currentServer ? this._currentServer.url + '/v1' : "");
 
-	constructor(settings: PluginSettings) {
+	constructor(app: App, settings: PluginSettings) {
+		this._app = app;
 		this._settings = settings;
 		this._currentServer = settings.servers.find(s => s.name === settings.lastUsedServer);
 		this._currentModel = this._currentServer?.lastUsedModel ?? "";
@@ -40,9 +42,13 @@ export class ModelStore {
 		}
 	}
 
-	async #listModels(baseURL: string) {
+	async #listModels(baseURL: string, apiKey: string) {
 		try {
-			const response = await requestUrl(`${baseURL + MODELS_ENDPOINT}`);
+			let secret = apiKey ? this._app.secretStorage.getSecret(apiKey) : undefined;
+			const response = await requestUrl({
+				url: baseURL + MODELS_ENDPOINT,
+				headers: secret ? { Authorization: `Bearer ${secret}` } : undefined,
+			});
 			const { data } = response.json as { data: ModelInfo[] };
 			return data;
 		} catch (error) {
@@ -66,7 +72,7 @@ export class ModelStore {
 		void this._serverRefreshRequested;
 		return (async () => {
 			const listModelsPromises = this._settings.servers.map((s) =>
-				this.#listModels(s.url),
+				this.#listModels(s.url, s.apiKey),
 			);
 			return Promise.allSettled(listModelsPromises).then((results) => {
 				return results.map((r, i) => ({

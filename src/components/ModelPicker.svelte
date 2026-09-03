@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ModelInfo } from "../services/models";
 	import { getPluginContext } from "src/services/context";
-	import { type LMStudioServer } from "src/services/settings.svelte";
+	import { DEFAULT_SERVER_NAME, type LMStudioServer } from "src/services/settings.svelte";
 	import { tooltip } from "./Tooltip.svelte";
 	import { icon } from "./Icon.svelte";
 	import { t } from "src/i18n";
@@ -71,9 +71,9 @@
 			<select tabindex="-1" bind:this={select} bind:value {onchange}>
 				{#each modelsByServer as { server, connected, models }}
 					{@const name =
-						server.name === "default"
-							? t("serverModal.default")
-							: server.name}
+							server.name === DEFAULT_SERVER_NAME
+								? t("serverModal.default")
+								: server.name}
 					{#if multiserver}
 						<optgroup
 							label={name +
