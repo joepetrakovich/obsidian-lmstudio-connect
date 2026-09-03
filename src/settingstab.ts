@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Modal, Setting, type SettingDefinitionItem, debounce, requestUrl, SecretComponent, ButtonComponent, setIcon, type Debouncer, ExtraButtonComponent } from "obsidian";
+import { App, PluginSettingTab, Modal, Setting, type SettingDefinitionItem, debounce, requestUrl, SecretComponent, setIcon, type Debouncer, ExtraButtonComponent } from "obsidian";
 import type LMStudioConnectPlugin from "./main";
 import { t } from "./i18n";
 import { DEFAULT_SERVER_NAME, MODELS_ENDPOINT, type LMStudioServer } from "./services/settings.svelte";
@@ -111,7 +111,8 @@ export async function checkServerHealth(url: string, secret?: string | null): Pr
 		return { httpCode: resp.status, ok: resp.status === 200, count: data?.length ?? 0 };
 	} catch (e) {
 		console.error(e);
-		return { httpCode: e?.status ?? null, ok: false, count: 0 };
+		const status = typeof e === "object" && e !== null && "status" in e ? (e as { status?: number }).status : null;
+		return { httpCode: status ?? null, ok: false, count: 0 };
 	}
 }
 
