@@ -56,7 +56,7 @@ export class SettingsTab extends PluginSettingTab {
 									this.app,
 									server.name === DEFAULT_SERVER_NAME,
 									(name, url, apiKey) => {
-										const current = this.plugin.settings.servers.at(index);
+										const current = this.plugin.settings.servers[index];
 										if (current) {
 											current.name = server.name === DEFAULT_SERVER_NAME ? DEFAULT_SERVER_NAME : name;
 											current.url = url;
