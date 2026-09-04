@@ -31,7 +31,7 @@
 		createOpenAICompatible({
 			name: "lmstudio",
 			baseURL: modelStore.currentBaseUrl,
-			apiKey: modelStore.currentServer?.apiKey
+			apiKey: modelStore.currentApiKey
 		}),
 	);
 

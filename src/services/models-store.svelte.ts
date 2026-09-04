@@ -5,7 +5,7 @@ import type { ModelInfo } from "./models";
 /**
 * Provides access to available LLM models from the server URLs.
 * Also provides functions to refresh the list of available servers
-* and perhaps to hold the active server and model and keep it
+* and holds the active server and model and keep it
 * synced with settings.
 **/
 export class ModelStore {
@@ -16,6 +16,10 @@ export class ModelStore {
 	private _serverRefreshRequested = $state(0);
 
 	currentBaseUrl: string = $derived(this._currentServer ? this._currentServer.url + '/v1' : "");
+	currentApiKey: string | undefined = $derived.by(() => {
+		let apiKey = this._currentServer?.apiKey;
+		return apiKey ? this._app.secretStorage.getSecret(apiKey) ?? undefined : undefined;
+	});
 
 	constructor(app: App, settings: PluginSettings) {
 		this._app = app;
