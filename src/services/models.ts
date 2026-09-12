@@ -70,7 +70,8 @@ export interface Exchange {
 
 export const Config = z.object({
 	prompt: z.string(),
-	hideToolUse: z.boolean().default(false)
+	hideToolUse: z.boolean().default(false),
+	hideReasoning: z.boolean().default(false)
 });
 
 export type Config = z.infer<typeof Config>;

@@ -28,13 +28,14 @@ You can also embed a prompt directly in your notes using a fenced codeblock with
 
 ~~~
 ```lmsc
-prompt: What's hot on reddit today?
+prompt: What's the weather in New York today?
 ```
 ~~~
 
 **Options:**
 - `prompt` (required) - The prompt to send to the LLM
 - `hideToolUse` (optional, default: `false`) - When `true`, hides tool call details from the response
+- `hideReasoning` (optional, default: `false`) - When `true`, hides the reasoning/thinking output from the response
 
 ![LM Studio Connect chat window](chatview.png)
 ![Chat with your notes](reference-notes.png)

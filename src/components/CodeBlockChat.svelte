@@ -43,6 +43,7 @@
 			{onretry}
 			hideUserMessage={true}
 			hideToolUse={config.hideToolUse}
+			hideReasoning={config.hideReasoning}
 		/>
 	{/if}
 </div>

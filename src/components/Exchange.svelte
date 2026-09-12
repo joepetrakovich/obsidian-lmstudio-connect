@@ -14,14 +14,21 @@
 		onretry,
 		hideUserMessage = false,
 		hideToolUse = false,
+		hideReasoning = false,
 	}: {
 		exchange: Exchange;
 		onretry: () => void;
 		hideUserMessage?: boolean;
 		hideToolUse?: boolean;
+		hideReasoning?: boolean;
 	} = $props();
 
 	const { response } = $derived(exchange);
+	const messages = $derived(
+		hideReasoning
+			? response.messages.filter((message) => message.type !== "reasoning")
+			: response.messages,
+	);
 
 	function markdown(content: string): Attachment {
 		return (element) => {
@@ -61,7 +68,7 @@
 	{/if}
 	<div class={["response", response.status]}>
 		<span class="spinner" {@attach icon("loader")}></span>
-		{#each response.messages as message, i}
+		{#each messages as message, i}
 			<div
 				in:fade
 				class={[
