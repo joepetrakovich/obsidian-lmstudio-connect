@@ -23,6 +23,15 @@ use LLMs with your notes privately and offline.
 button at the bottom of the chatbox.
 - The LLM is also made aware of your current open notes so you can talk about them without referencing them explicitly.
 
+### Use MCP servers configured in LM Studio
+The plugin can use [MCP servers you've configured in LM Studio](https://lmstudio.ai/docs/developer/core/server/settings) directly.
+- Add your MCP servers to LM Studio's `mcp.json`.
+- In the plugin settings, disable **Use vault tools** to use LM Studio's system prompt and MCP server configuration directly.
+- Enable the servers you want under the **MCP servers** section that appears.
+
+> [!WARNING]
+> Requires authentication and the **"Allow calling servers from mcp.json"** setting to be enabled in LM Studio.
+
 ### Codeblock prompts
 You can also embed a prompt directly in your notes using a fenced codeblock with the `lmsc` language identifier:
 
