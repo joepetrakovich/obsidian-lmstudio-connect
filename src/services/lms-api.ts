@@ -179,27 +179,3 @@ export async function* streamChat(
 	}
 }
 
-export interface ReasoningOutputView extends ReasoningOutput {
-	status: "in-progress" | "done";
-}
-
-export interface StreamErrorOutput {
-	type: "stream_error",
-	message: string,
-}
-
-export type OutputItemView =
-	| OutputMessage
-	| ToolCallOutput
-	| InvalidToolCallOutput
-	| ReasoningOutputView
-	| StreamErrorOutput;
-
-export interface LMSExchange {
-	created: number;
-	userMessage: { content: string; displayHTML: string };
-	response: {
-		status: "in-progress" | "completed" | "error";
-		messages: OutputItemView[];
-	};
-}

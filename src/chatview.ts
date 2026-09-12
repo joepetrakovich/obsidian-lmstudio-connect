@@ -1,5 +1,5 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian';
-import ChatRoot from './components/ChatRoot.svelte';
+import ChatContainer from './components/ChatContainer.svelte';
 import { mount, unmount } from 'svelte';
 import type LMStudioConnectPlugin from './main';
 import { t } from './i18n';
@@ -8,7 +8,7 @@ export const VIEW_TYPE_CHAT = 'chat-view';
 
 export class ChatView extends ItemView {
 	plugin: LMStudioConnectPlugin;
-	chatRoot: ReturnType<typeof ChatRoot> | undefined;
+	chatContainer: ReturnType<typeof ChatContainer> | undefined;
 
 	constructor(leaf: WorkspaceLeaf, plugin: LMStudioConnectPlugin) {
 		super(leaf);
@@ -28,7 +28,7 @@ export class ChatView extends ItemView {
 	}
 
 	async onOpen() {
-		this.chatRoot = mount(ChatRoot, {
+		this.chatContainer = mount(ChatContainer, {
 			target: this.contentEl,
 			props: { plugin: this.plugin }
 		});
@@ -36,8 +36,8 @@ export class ChatView extends ItemView {
 	}
 
 	async onClose() {
-		if (this.chatRoot) {
-			await unmount(this.chatRoot);
+		if (this.chatContainer) {
+			await unmount(this.chatContainer);
 		}
 	}
 }

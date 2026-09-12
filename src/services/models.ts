@@ -2,9 +2,6 @@
 
 import * as z from "zod";
 import type { AssistantModelMessage, ModelMessage, ToolModelMessage } from "ai";
-import type { ReadFileInput } from "src/llm/tools/readFile";
-import type { ListFilesInput } from "src/llm/tools/listFiles";
-import type { WebFetchInput } from "src/llm/tools/webFetch";
 import { createCurrentNotesPrompt, createUserPrompt } from "src/llm/prompts";
 import { getOpenFiles } from "src/services/obsidian-utils";
 import type LMStudioConnectPlugin from "src/main";
@@ -31,31 +28,13 @@ export interface Replacement {
 }
 export interface InputValue { text: string, markdownFiles?: string[], display: string }
 
-export interface ToolInputs {
-	readFile: ReadFileInput;
-	listFiles: ListFilesInput;
-	webFetch: WebFetchInput;
-}
-export type ToolCallMessage = {
-	[K in keyof ToolInputs]: {
-		type: "tool-call";
-		id: string;
-		name: K;
-		input: ToolInputs[K];
-	}
-}[keyof ToolInputs];
+export type ChatMessage =
+	| { type: "text", content: string }
+	| { type: "reasoning", content: string, status: "in-progress" | "done" }
+	| { type: "tool_call", name: string, input?: Record<string, unknown>, output?: string, reason?: string }
+	| { type: "stream_error", message: string };
 
-export type ResponseMessage = { type: "text", parts: string[], isFinal: boolean }
-	| { type: "reasoning", parts: string[] }
-	| ToolCallMessage
-	| { type: "tool-result", id: string, content: string };
-
-export const orderOf = (type: string) => {
-	if (type === 'text') return 1;
-	return 0;
-};
-
-export function toHarnessApiMessages(plugin: LMStudioConnectPlugin, exchanges: Exchange[]): ModelMessage[] {
+export function toCompletionsApiMessages(plugin: LMStudioConnectPlugin, exchanges: Exchange[]): ModelMessage[] {
 	const modelMessages: ModelMessage[] = [];
 	const currentNotes: string[] = getOpenFiles(plugin).map(f => f.path);
 
@@ -72,40 +51,21 @@ export function toHarnessApiMessages(plugin: LMStudioConnectPlugin, exchanges: E
 			content: [{ type: "text", text }],
 		});
 
-		ai_sdk_messages.forEach((m) => modelMessages.push(m));
+		(ai_sdk_messages ?? []).forEach((m) => modelMessages.push(m));
 	}
 
 	return modelMessages;
 }
-
-export function toApiMessages(exchanges: Exchange[]): ModelMessage[] {
-	const modelMessages: ModelMessage[] = [];
-
-	for (let i = 0; i < exchanges.length; i++) {
-		const { userMessage, ai_sdk_messages } = exchanges[i];
-
-		const text = userMessage.content;
-
-		modelMessages.push({
-			role: "user",
-			content: [{ type: "text", text }],
-		});
-
-		ai_sdk_messages.forEach((m) => modelMessages.push(m));
-	}
-
-	return modelMessages;
-}
-
 
 export interface Exchange {
 	created: number;
 	userMessage: { content: string, displayHTML: string };
 	response: {
 		status: "in-progress" | "completed" | "error";
-		messages: ResponseMessage[];
+		messages: ChatMessage[];
 	}
-	ai_sdk_messages: (AssistantModelMessage | ToolModelMessage)[];
+	ai_sdk_messages?: (AssistantModelMessage | ToolModelMessage)[];
+	response_id?: string;
 }
 
 export const Config = z.object({
