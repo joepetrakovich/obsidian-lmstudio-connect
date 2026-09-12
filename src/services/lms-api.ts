@@ -135,8 +135,8 @@ export async function* streamChat(
 	request: ChatRequest,
 	options: { apiKey?: string, signal?: AbortSignal } = {},
 ): AsyncGenerator<ChatStreamEvent> {
-	// requestUrl buffers the full response and cannot consume SSE streams
-	// eslint-disable-next-line no-restricted-globals
+	// requestUrl buffers the full response and cannot consume SSE streams,
+	// so fetch is used directly to stream the response.
 	const response = await fetch(url, {
 		method: "POST",
 		headers: {

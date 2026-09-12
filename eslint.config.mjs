@@ -32,6 +32,17 @@ export default defineConfig([
 			},
 	},
 	{
+		files: ["src/services/lms-api.ts"],
+		rules: {
+			// requestUrl buffers the full response and cannot consume SSE streams,
+			// so this module uses fetch directly. Keep the other global guards.
+			"no-restricted-globals": ["error",
+				{ name: "app", message: "Avoid using the global app object. Instead use the reference provided by your plugin instance." },
+				{ name: "localStorage", message: "Prefer `App#saveLocalStorage` / `App#loadLocalStorage` functions to write / read localStorage data that's unique to a vault." },
+			],
+		},
+	},
+	{
 		files: ["**/*.svelte.ts"],
 		languageOptions: {
 			globals: {
