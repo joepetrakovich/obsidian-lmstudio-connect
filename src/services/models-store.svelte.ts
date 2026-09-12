@@ -1,5 +1,6 @@
 import { App, requestUrl } from "obsidian";
 import { MODELS_ENDPOINT, type LMStudioServer, type PluginSettings } from "src/services/settings.svelte";
+import type { Integration } from "./lms-api";
 import type { ModelInfo } from "./models";
 
 /**
@@ -19,6 +20,16 @@ export class ModelStore {
 	currentApiKey: string | undefined = $derived.by(() => {
 		let apiKey = this._currentServer?.apiKey;
 		return apiKey ? this._app.secretStorage.getSecret(apiKey) ?? undefined : undefined;
+	});
+	currentIntegrations: Integration[] | undefined = $derived.by(() => {
+		const enabled = this._settings.integrations.filter(i => i.enabled);
+		if (!enabled.length) return undefined;
+		return enabled.map(i => ({
+			...(i.type === 'plugin'
+				? { type: 'plugin' as const, id: i.id.startsWith('mcp/') ? i.id : `mcp/${i.id}` }
+				: { type: 'ephemeral_mcp' as const, server_label: i.server_label, server_url: i.server_url }),
+			...(i.allowedTools.length ? { allowed_tools: i.allowedTools } : {}),
+		}));
 	});
 
 	constructor(app: App, settings: PluginSettings) {

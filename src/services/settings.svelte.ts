@@ -3,8 +3,27 @@ import { untrack } from "svelte";
 export interface PluginSettings {
 	lastUsedServer: string;
 	servers: LMStudioServer[];
+	useVaultTools: boolean,
+	useWebFetchTool: boolean
+	integrations: (Plugin | EphemeralMCP)[] //NOTE: probably this and the useXX settings should be per server but can migrate to that later if people request it.  99.9% of users are only using one server, I only added support for multiple for myself when I had a second PC at home.
 }
 
+export interface Integration {
+	enabled: boolean
+}
+
+export interface Plugin extends Integration {
+	type: "plugin",
+	id: string,
+	allowedTools: string[]
+}
+
+export interface EphemeralMCP extends Integration {
+	type: "ephemeral_mcp",
+	server_label: string,
+	server_url: string,
+	allowedTools: string[]
+}
 export interface LMStudioServer {
 	name: string;
 	url: string;
@@ -18,7 +37,10 @@ export const DEFAULT_SERVER_NAME = 'default';
 const DEFAULT_SERVER: LMStudioServer = { name: DEFAULT_SERVER_NAME, url: DEFAULT_SERVER_URL, apiKey: '', lastUsedModel: '' };
 const DEFAULT_SETTINGS: PluginSettings = {
 	lastUsedServer: DEFAULT_SERVER.name,
-	servers: [DEFAULT_SERVER]
+	servers: [DEFAULT_SERVER],
+	useVaultTools: true,
+	useWebFetchTool: true,
+	integrations: []
 }
 
 export const chatViewActive = $state({ watch: 0 });
@@ -37,7 +59,6 @@ export async function createSettings(persistence: PersistenceConfig) {
 		if (defaultServer) {
 			if (defaultServer.url.trim() === '') {
 				defaultServer.url = DEFAULT_SERVER_URL;
-				defaultServer.apiKey = '';
 			}
 		} else {
 			saved.servers.push(DEFAULT_SERVER);

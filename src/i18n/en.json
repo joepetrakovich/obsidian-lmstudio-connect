@@ -11,7 +11,12 @@
     "serverDescription": "Configure the connection to one or more servers.",
     "manage": "Manage",
     "serversHeading": "LM Studio servers",
-    "addServer": "Add server"
+    "addServer": "Add server",
+    "noIntegrations": "No integrations",
+    "addIntegration": "Add integration",
+    "integrationName": "Integration ID",
+    "integrationPlaceholder": "e.g. my-integration",
+    "integrationRequired": "Integration cannot be empty"
   },
   "serverModal": {
     "instructions": "Override the default server URL or add additional servers below.",
@@ -59,6 +64,8 @@
 	"cancel": "Cancel"
   },
   "messages": {
+	  "thinking": "Thinking...",
+	  "thought": "Thought",
 	  "tool-call": {
 	  "readFile": "Read {{filePath}}",
 	  "listFiles": "Listed {{folderPath}}",

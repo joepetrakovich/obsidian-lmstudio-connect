@@ -11,7 +11,12 @@
     "serverDescription": "配置到一个或多个服务器的连接。",
     "manage": "管理",
     "serversHeading": "LM Studio 服务器",
-    "addServer": "添加服务器"
+    "addServer": "添加服务器",
+    "noIntegrations": "无集成",
+    "addIntegration": "添加集成",
+    "integrationName": "集成标识符",
+    "integrationPlaceholder": "例如：my-integration",
+    "integrationRequired": "集成标识符不能为空"
   },
   "serverModal": {
     "instructions": "覆盖默认服务器 URL 或在下方添加其他服务器。",
@@ -58,6 +63,8 @@
     "cancel": "取消"
   },
   "messages": {
+	  "thinking": "思考中...",
+	  "thought": "已思考",
 	  "tool-call": {
 		  "readFile": "已读取 {{filePath}}",
 		  "listFiles": "已列出 {{folderPath}}",

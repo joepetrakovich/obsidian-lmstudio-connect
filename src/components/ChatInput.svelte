@@ -22,9 +22,11 @@
 	let {
 		onsend,
 		onabort,
+		disablenoterefs = false,
 	}: {
 		onsend: () => void;
 		onabort: (() => void) | undefined;
+		disablenoterefs?: boolean;
 	} = $props();
 
 	$effect(() => {
@@ -165,28 +167,29 @@
 			doc: "",
 			extensions: [
 				placeholder(t("chat.placeholder")),
-				fileRefHighlighter,
-				cursorWithinFileRef,
+				...(!disablenoterefs ? [fileRefHighlighter, cursorWithinFileRef] : []),
 				fileReferenceField,
 				EditorView.lineWrapping,
 				EditorView.updateListener.of((v: ViewUpdate) => {
 					if (v.docChanged) {
 						canSend = v.state.doc.length > 0;
 
-						// //trigger popup if cursor within markdown ref brackets
-						const cursorInRef = v.state.field(cursorWithinFileRef);
-						if (cursorInRef) {
-							const pos = v.view.coordsAtPos(
-								cursorInRef.namePos,
-							) || { left: 0, top: 0 };
-							const chatboxRect = chatbox.getBoundingClientRect();
-							popoverRefOffset = {
-								x: pos.left - chatboxRect.x,
-								y: pos.top - chatboxRect.y,
-							};
-							fileSuggest.open(cursorInRef.fileRefName);
-						} else {
-							fileSuggest.close();
+						if (!disablenoterefs) {
+							// //trigger popup if cursor within markdown ref brackets
+							const cursorInRef = v.state.field(cursorWithinFileRef);
+							if (cursorInRef) {
+								const pos = v.view.coordsAtPos(
+									cursorInRef.namePos,
+								) || { left: 0, top: 0 };
+								const chatboxRect = chatbox.getBoundingClientRect();
+								popoverRefOffset = {
+									x: pos.left - chatboxRect.x,
+									y: pos.top - chatboxRect.y,
+								};
+								fileSuggest.open(cursorInRef.fileRefName);
+							} else {
+								fileSuggest.close();
+							}
 						}
 					}
 				}),
@@ -209,13 +212,15 @@
 	<div class="toolbar">
 		<ModelPicker />
 		<div class="right">
-			<button
-				class="addFileRef"
-				onclick={addFileRef}
-				{@attach icon("brackets")}
-				{@attach tooltip(t("chat.addNoteReference"))}
-				aria-label={t("chat.addNoteReference")}
-			></button>
+			{#if !disablenoterefs}
+				<button
+					class="addFileRef"
+					onclick={addFileRef}
+					{@attach icon("brackets")}
+					{@attach tooltip(t("chat.addNoteReference"))}
+					aria-label={t("chat.addNoteReference")}
+				></button>
+			{/if}
 			{#if onabort}
 				<CancelButton onclick={onabort} />	
 			{:else}

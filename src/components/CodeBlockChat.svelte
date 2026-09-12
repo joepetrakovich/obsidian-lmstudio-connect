@@ -1,13 +1,11 @@
 <script lang="ts">
 	import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-	import {
-		streamText,
-		stepCountIs,
-	} from "ai";
+	import { streamText, stepCountIs } from "ai";
 	import LMStudioConnectPlugin from "src/main";
 	import {
 		Config,
 		toApiMessages,
+		toHarnessApiMessages,
 		type Exchange,
 		type ResponseMessage,
 		type ToolCallMessage,
@@ -17,28 +15,35 @@
 	import { createReadFileTool } from "src/llm/tools/readFile";
 	import { createListFilesTool } from "src/llm/tools/listFiles";
 	import { createWebFetchTool } from "src/llm/tools/webFetch";
-	import { systemPrompt, } from "src/llm/prompts";
+	import { systemPrompt } from "src/llm/prompts";
 	import CancelButton from "./CancelButton.svelte";
 	import SendButton from "./SendButton.svelte";
 
-	let { plugin, config }: { plugin: LMStudioConnectPlugin; config: Config } = $props();
+	let { plugin, config }: { plugin: LMStudioConnectPlugin; config: Config } =
+		$props();
 
 	// svelte-ignore state_referenced_locally
 	setPluginContext(plugin);
 	const modelStore = $derived(plugin.modelStore);
+	const useVaultTools = $derived(plugin.settings.useVaultTools);
+	const useWebFetchTool = $derived(plugin.settings.useWebFetchTool);
 
 	let provider = $derived(
 		createOpenAICompatible({
 			name: "lmstudio",
 			baseURL: modelStore.currentBaseUrl,
-			apiKey: modelStore.currentApiKey
+			apiKey: modelStore.currentApiKey,
 		}),
 	);
 
 	let exchange: Exchange | undefined = $state();
 	let abortController: AbortController | undefined = $state();
 	let onabort = $derived(
-		abortController ? () => { abortController?.abort(); } : undefined
+		abortController
+			? () => {
+					abortController?.abort();
+				}
+			: undefined,
 	);
 	let errored: boolean = false;
 
@@ -60,15 +65,19 @@
 		abortController = new AbortController();
 		const abortSignal = abortController.signal;
 
-		const result = streamText({
-			model: provider(modelStore.currentModel),
-			system: systemPrompt,
-			messages: toApiMessages(plugin, [exchange]),
-		tools: {
+		const tools = {
 			readFile: createReadFileTool(plugin),
 			listFiles: createListFilesTool(plugin),
-			webFetch: createWebFetchTool(),
-		},
+		};
+		if (useWebFetchTool) Object.assign(tools, { webFetch: createWebFetchTool() });
+
+		const result = streamText({
+			model: provider(modelStore.currentModel),
+			system: useVaultTools ? systemPrompt(useWebFetchTool) : undefined,
+			messages: useVaultTools ? toHarnessApiMessages(plugin, [exchange]) : toApiMessages([exchange]),
+			...(useVaultTools && { //TODO: this may be granular, and/or may have separate component for no harness
+				tools,
+			}),
 			stopWhen: stepCountIs(20),
 			onStepFinish({ staticToolCalls }) {
 				for (const call of staticToolCalls) {
@@ -126,7 +135,12 @@
 	</div>
 
 	{#if exchange}
-		<ExchangeView {exchange} {onretry} hideUserMessage={true} hideToolUse={config.hideToolUse} />
+		<ExchangeView
+			{exchange}
+			{onretry}
+			hideUserMessage={true}
+			hideToolUse={config.hideToolUse}
+		/>
 	{/if}
 </div>
 

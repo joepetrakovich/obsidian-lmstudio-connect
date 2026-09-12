@@ -1,12 +1,10 @@
 <script lang="ts">
 	import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-	import {
-		streamText,
-		stepCountIs,
-	} from "ai";
+	import { streamText, stepCountIs } from "ai";
 	import LMStudioConnectPlugin from "src/main";
 	import {
-	toApiMessages,
+		toApiMessages,
+		toHarnessApiMessages,
 		type Exchange,
 		type InputValue,
 		type ResponseMessage,
@@ -26,19 +24,25 @@
 	// svelte-ignore state_referenced_locally
 	setPluginContext(plugin);
 	const modelStore = $derived(plugin.modelStore);
+	const useVaultTools = $derived(plugin.settings.useVaultTools);
+	const useWebFetchTool = $derived(plugin.settings.useWebFetchTool);
 
 	let provider = $derived(
 		createOpenAICompatible({
 			name: "lmstudio",
 			baseURL: modelStore.currentBaseUrl,
-			apiKey: modelStore.currentApiKey
+			apiKey: modelStore.currentApiKey,
 		}),
 	);
 
 	let exchanges: Exchange[] = $state([]);
 	let currentExchange: Exchange | undefined = $state();
 	let abortController: AbortController | undefined = $state();
-	let onabort = $derived( abortController ? () => { abortController?.abort(); } : undefined);
+	let onabort = $derived(
+		abortController
+			? () => { abortController?.abort(); }
+			: undefined,
+	);
 	let bufferHeight = $state(0);
 	let errored: boolean = false;
 	let input: ChatInput;
@@ -73,15 +77,17 @@
 		abortController = new AbortController();
 		const abortSignal = abortController.signal;
 
-		const result = streamText({
-			model: provider(modelStore.currentModel),
-			system: systemPrompt,
-			messages: toApiMessages(plugin, exchanges),
-		tools: {
+		const tools = {
 			readFile: createReadFileTool(plugin),
 			listFiles: createListFilesTool(plugin),
-			webFetch: createWebFetchTool()
-		},
+		};
+		if (useWebFetchTool) Object.assign(tools, { webFetch: createWebFetchTool() });
+
+		const result = streamText({
+			model: provider(modelStore.currentModel),
+			system: useVaultTools ? systemPrompt(useWebFetchTool) : undefined,
+			messages: useVaultTools ? toHarnessApiMessages(plugin, exchanges) : toApiMessages(exchanges),
+			...(useVaultTools && { tools }),
 			stopWhen: stepCountIs(20),
 			onStepFinish({ staticToolCalls }) {
 				for (const call of staticToolCalls) {
@@ -131,7 +137,6 @@
 		exchanges = exchanges.slice(0, -1);
 		send(cachedInput);
 	}
-
 </script>
 
 <div class="lmsc container">

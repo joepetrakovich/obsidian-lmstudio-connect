@@ -17,9 +17,9 @@ export class SettingsTab extends PluginSettingTab {
 		return [
 			{
 				type: 'list',
-			heading: t('settings.serversHeading'),
-			addItem: {
-				name: t('settings.addServer'),
+				heading: t('settings.serversHeading'),
+				addItem: {
+					name: t('settings.addServer'),
 					action: () => new AddEditLMStudioServerModal(
 						this.app,
 						false,
@@ -41,7 +41,7 @@ export class SettingsTab extends PluginSettingTab {
 						if (server.apiKey) {
 							setIcon(setting.descEl.createSpan(), 'key');
 						}
-						
+
 						setting.descEl.toggleClass('uses-key', server.apiKey?.length > 0)
 						const statusIcon = setting.nameEl.createSpan({ cls: 'lmsc-server-status' });
 						setIcon(statusIcon, 'circle-off');
@@ -68,9 +68,9 @@ export class SettingsTab extends PluginSettingTab {
 									() => this.plugin.modelStore.refreshAvailableModels(),
 									this.plugin.settings.servers.filter((_, i) => i !== index).map(s => s.name),
 									() => this.update(),
-								server.name === DEFAULT_SERVER_NAME ? t('serverModal.default') : server.name,
-								server.url,
-								server.apiKey).open()
+									server.name === DEFAULT_SERVER_NAME ? t('serverModal.default') : server.name,
+									server.url,
+									server.apiKey).open()
 							}));
 
 						if (server.name !== DEFAULT_SERVER_NAME) {
@@ -85,6 +85,69 @@ export class SettingsTab extends PluginSettingTab {
 						}
 					}
 				})),
+			},
+			{
+				type: 'group', heading: 'Advanced', items: [
+					{
+						name: 'Use vault tools',
+						desc: 'Gives models the ability to read your notes. Disable this option to use the system prompts, MCPs, and other configuration from LM Studio directly.',
+						render: (setting) => {
+							setting.addToggle(toggle => toggle.setValue(this.plugin.settings.useVaultTools));
+							const onClick = (evt: Event) => {
+								evt.preventDefault();
+								evt.stopPropagation();
+								if (this.plugin.settings.useVaultTools) {
+									new ConfirmModal(this.app, () => {
+										this.plugin.settings.useVaultTools = false;
+										this.update();
+									}).open();
+								} else {
+									this.plugin.settings.useVaultTools = true;
+									this.update();
+								}
+							};
+							setting.controlEl.addEventListener('click', onClick, true);
+							return () => setting.controlEl.removeEventListener('click', onClick, true);
+						}
+					},
+					{
+						name: 'Web fetch',
+						desc: 'Lets models make web requests when asked or when recent information is needed to answer.',
+						visible: () => this.plugin.settings.useVaultTools,
+						control: { type: 'toggle', key: 'useWebFetchTool' }
+					},
+					{
+						type: 'page',
+						name: 'Integrations',
+						desc: 'Define plugin integrations you have set up in LM Studio to allow models to use them.',
+						visible: () => !this.plugin.settings.useVaultTools,
+						items: [
+							{
+								type: 'list',
+								emptyState: t('settings.noIntegrations'),
+								addItem: {
+									name: t('settings.addIntegration'),
+									action: () => new IntegrationModal(this.app, (id) => {
+										this.plugin.settings.integrations.push({ type: 'plugin', id, allowedTools: [], enabled: true });
+										this.update();
+									}).open(),
+								},
+								onDelete: (index) => {
+									this.plugin.settings.integrations.splice(index, 1);
+									this.update();
+								},
+								items: this.plugin.settings.integrations.map((integration) => ({
+									name: integration.type === 'plugin' ? integration.id : integration.server_label,
+									render: (setting) => {
+										setting.addToggle(toggle => toggle
+											.setValue(integration.enabled)
+											.onChange((value) => { integration.enabled = value; }));
+									},
+								})),
+							},
+						],
+					}
+				]
 			}
 		]
 	}
@@ -113,6 +176,78 @@ export async function checkServerHealth(url: string, secret?: string | null): Pr
 		console.error(e);
 		const status = typeof e === "object" && e !== null && "status" in e ? (e as { status?: number }).status : null;
 		return { httpCode: status ?? null, ok: false, count: 0 };
+	}
+}
+
+export class ConfirmModal extends Modal {
+	onConfirm: () => void;
+
+	constructor(app: App, onConfirm: () => void) {
+		super(app);
+		this.onConfirm = onConfirm;
+	}
+
+	onOpen(): void {
+		this.setTitle('Are you sure?');
+		new Setting(this.modalEl)
+			.addButton((btn) =>
+				btn
+					.setButtonText('Confirm')
+					.setCta()
+					.onClick(() => {
+						const onConfirm = this.onConfirm;
+						this.close();
+						onConfirm();
+					}))
+			.addButton((btn) =>
+				btn
+					.setButtonText('Cancel')
+					.onClick(() => this.close()));
+	}
+}
+
+export class IntegrationModal extends Modal {
+	onSave: (id: string) => void;
+	nameSetting: Setting;
+	name = '';
+
+	constructor(app: App, onSave: (id: string) => void) {
+		super(app);
+		this.setTitle(t('settings.addIntegration'));
+		this.onSave = onSave;
+
+		this.scope.register([], 'Enter', (evt) => {
+			evt.preventDefault();
+			this.submit();
+		});
+
+		this.nameSetting = new Setting(this.contentEl)
+			.setName(t('settings.integrationName'))
+			.addText((text) =>
+				text
+					.setPlaceholder(t('settings.integrationPlaceholder'))
+					.onChange((value) => { this.name = value; }));
+
+		new Setting(this.contentEl)
+			.addButton((btn) =>
+				btn
+					.setButtonText(t('serverModal.save'))
+					.setCta()
+					.onClick(() => this.submit()))
+			.addButton((btn) =>
+				btn
+					.setButtonText(t('serverModal.cancel'))
+					.onClick(() => this.close()));
+	}
+
+	private submit(): void {
+		const id = this.name.trim();
+		if (!id) {
+			this.nameSetting.setErrorMessage(t('settings.integrationRequired'));
+			return;
+		}
+		this.close();
+		this.onSave(id);
 	}
 }
 

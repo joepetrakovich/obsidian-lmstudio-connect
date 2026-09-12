@@ -11,7 +11,12 @@
     "serverDescription": "1つまたは複数のサーバーへの接続を設定します。",
     "manage": "管理",
     "serversHeading": "LM Studioサーバー",
-    "addServer": "サーバーを追加"
+    "addServer": "サーバーを追加",
+    "noIntegrations": "統合はありません",
+    "addIntegration": "統合を追加",
+    "integrationName": "統合ID",
+    "integrationPlaceholder": "例: my-integration",
+    "integrationRequired": "統合IDは空にできません"
   },
   "serverModal": {
     "instructions": "デフォルトのサーバーURLを上書きするか、以下にサーバーを追加してください。",
@@ -58,6 +63,8 @@
     "cancel": "キャンセル"
   },
   "messages": {
+	  "thinking": "考え中...",
+	  "thought": "思考済み",
 	  "tool-call": {
 		  "readFile": "{{filePath}} を読み込みました",
 		  "listFiles": "{{folderPath}} を一覧表示",

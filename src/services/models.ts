@@ -55,15 +55,15 @@ export const orderOf = (type: string) => {
 	return 0;
 };
 
-export function toApiMessages(plugin: LMStudioConnectPlugin, exchanges: Exchange[]): ModelMessage[] {
+export function toHarnessApiMessages(plugin: LMStudioConnectPlugin, exchanges: Exchange[]): ModelMessage[] {
 	const modelMessages: ModelMessage[] = [];
-	const currentNotes: string[] = getOpenFiles(plugin).map(f => f.path); 
+	const currentNotes: string[] = getOpenFiles(plugin).map(f => f.path);
 
 	for (let i = 0; i < exchanges.length; i++) {
 		const { userMessage, ai_sdk_messages } = exchanges[i];
 		const query = createUserPrompt(userMessage.content);
 
-		const text = i === 0 
+		const text = i === 0
 		? [createCurrentNotesPrompt(currentNotes), query].join('\n\n')
 		: query 
 
@@ -77,6 +77,26 @@ export function toApiMessages(plugin: LMStudioConnectPlugin, exchanges: Exchange
 
 	return modelMessages;
 }
+
+export function toApiMessages(exchanges: Exchange[]): ModelMessage[] {
+	const modelMessages: ModelMessage[] = [];
+
+	for (let i = 0; i < exchanges.length; i++) {
+		const { userMessage, ai_sdk_messages } = exchanges[i];
+
+		const text = userMessage.content;
+
+		modelMessages.push({
+			role: "user",
+			content: [{ type: "text", text }],
+		});
+
+		ai_sdk_messages.forEach((m) => modelMessages.push(m));
+	}
+
+	return modelMessages;
+}
+
 
 export interface Exchange {
 	created: number;
