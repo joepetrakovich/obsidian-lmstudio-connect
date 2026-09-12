@@ -3,6 +3,8 @@ import type LMStudioConnectPlugin from "./main";
 import { t } from "./i18n";
 import { DEFAULT_SERVER_NAME, MODELS_ENDPOINT, type LMStudioServer } from "./services/settings.svelte";
 
+const MCP_SETTINGS_DOC_URL = 'https://lmstudio.ai/docs/developer/core/server/settings';
+
 export class SettingsTab extends PluginSettingTab {
 	plugin: LMStudioConnectPlugin;
 
@@ -87,10 +89,10 @@ export class SettingsTab extends PluginSettingTab {
 				})),
 			},
 			{
-				type: 'group', heading: 'Advanced', items: [
+				type: 'group', heading: t('settings.advancedHeading'), items: [
 					{
-						name: 'Use vault tools',
-						desc: 'Gives models the ability to read your notes. Disable this option to use the system prompts, MCPs, and other configuration from LM Studio directly.',
+						name: t('settings.useVaultTools'),
+						desc: t('settings.useVaultToolsDesc'),
 						render: (setting) => {
 							setting.addToggle(toggle => toggle.setValue(this.plugin.settings.useVaultTools));
 							const onClick = (evt: Event) => {
@@ -111,22 +113,32 @@ export class SettingsTab extends PluginSettingTab {
 						}
 					},
 					{
-						name: 'Web fetch',
-						desc: 'Lets models make web requests when asked or when recent information is needed to answer.',
+						name: t('settings.useWebFetchTool'),
+						desc: t('settings.useWebFetchToolDesc'),
 						visible: () => this.plugin.settings.useVaultTools,
 						control: { type: 'toggle', key: 'useWebFetchTool' }
 					},
 					{
 						type: 'page',
-						name: 'Integrations',
-						desc: 'Define plugin integrations you have set up in LM Studio to allow models to use them.',
+						name: t('settings.mcpServersHeading'),
+						desc: createFragment((frag) => {
+							frag.appendText(t('settings.mcpServersDesc'));
+							frag.createSpan({ cls: 'mod-warning', text: ' ' + t('settings.mcpServersAuthDesc') });
+							frag.createEl('br');
+							const link = frag.createEl('a', {
+								text: t('settings.learnMore'),
+								href: MCP_SETTINGS_DOC_URL,
+								attr: { target: '_blank', rel: 'noopener' },
+							});
+							link.addEventListener('click', (evt) => evt.stopPropagation());
+						}),
 						visible: () => !this.plugin.settings.useVaultTools,
 						items: [
 							{
 								type: 'list',
-								emptyState: t('settings.noIntegrations'),
+								emptyState: t('settings.noMcpServers'),
 								addItem: {
-									name: t('settings.addIntegration'),
+									name: t('settings.addMcpServer'),
 									action: () => new IntegrationModal(this.app, (id) => {
 										this.plugin.settings.integrations.push({ type: 'plugin', id, allowedTools: [], enabled: true });
 										this.update();
@@ -188,11 +200,12 @@ export class ConfirmModal extends Modal {
 	}
 
 	onOpen(): void {
-		this.setTitle('Are you sure?');
+		this.setTitle(t('confirm.title'));
+		this.contentEl.createEl('p', { text: t('confirm.body') });
 		new Setting(this.modalEl)
 			.addButton((btn) =>
 				btn
-					.setButtonText('Confirm')
+					.setButtonText(t('confirm.confirm'))
 					.setCta()
 					.onClick(() => {
 						const onConfirm = this.onConfirm;
@@ -201,7 +214,7 @@ export class ConfirmModal extends Modal {
 					}))
 			.addButton((btn) =>
 				btn
-					.setButtonText('Cancel')
+					.setButtonText(t('confirm.cancel'))
 					.onClick(() => this.close()));
 	}
 }
@@ -213,7 +226,7 @@ export class IntegrationModal extends Modal {
 
 	constructor(app: App, onSave: (id: string) => void) {
 		super(app);
-		this.setTitle(t('settings.addIntegration'));
+		this.setTitle(t('settings.addMcpServer'));
 		this.onSave = onSave;
 
 		this.scope.register([], 'Enter', (evt) => {
@@ -222,10 +235,11 @@ export class IntegrationModal extends Modal {
 		});
 
 		this.nameSetting = new Setting(this.contentEl)
-			.setName(t('settings.integrationName'))
+			.setName(t('settings.mcpServerName'))
+			.setDesc(t('settings.mcpServerNameDesc'))
 			.addText((text) =>
 				text
-					.setPlaceholder(t('settings.integrationPlaceholder'))
+					.setPlaceholder(t('settings.mcpServerPlaceholder'))
 					.onChange((value) => { this.name = value; }));
 
 		new Setting(this.contentEl)
@@ -243,7 +257,7 @@ export class IntegrationModal extends Modal {
 	private submit(): void {
 		const id = this.name.trim();
 		if (!id) {
-			this.nameSetting.setErrorMessage(t('settings.integrationRequired'));
+			this.nameSetting.setErrorMessage(t('settings.mcpServerRequired'));
 			return;
 		}
 		this.close();
