@@ -18,7 +18,7 @@
     "mcpServersDesc": "启用你在 LM Studio 的 mcp.json 中添加的 MCP 服务器。",
     "mcpServersAuthDesc": "需要在 LM Studio 中启用身份验证以及“允许调用 mcp.json 中的服务器”设置。",
     "learnMore": "了解更多",
-    "noMcpServers": "没有启用的 MCP 服务器",
+    "noMcpServers": "没有启用的 MCP 服务器。",
     "addMcpServer": "添加 MCP 服务器",
     "mcpServerName": "服务器名称",
     "mcpServerNameDesc": "LM Studio mcp.json 文件中的服务器名称。",

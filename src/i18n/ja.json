@@ -18,7 +18,7 @@
     "mcpServersDesc": "LM Studioのmcp.jsonで追加したMCPサーバーを有効にします。",
     "mcpServersAuthDesc": "LM Studioで「mcp.jsonからサーバーの呼び出しを許可」設定を有効にし、認証が必要です。",
     "learnMore": "詳細を見る",
-    "noMcpServers": "有効なMCPサーバーはありません",
+    "noMcpServers": "有効なMCPサーバーはありません。",
     "addMcpServer": "MCPサーバーを追加",
     "mcpServerName": "サーバー名",
     "mcpServerNameDesc": "LM Studioのmcp.jsonファイルにあるサーバー名です。",

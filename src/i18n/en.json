@@ -18,7 +18,7 @@
     "mcpServersDesc": "Enable MCP servers you've added in LM Studio's mcp.json.",
     "mcpServersAuthDesc": "Requires authentication and the \"Allow calling servers from mcp.json\" setting to be enabled in LM Studio.",
     "learnMore": "Learn more",
-    "noMcpServers": "No MCP servers enabled",
+    "noMcpServers": "No MCP servers enabled.",
     "addMcpServer": "Add MCP server",
     "mcpServerName": "Server name",
     "mcpServerNameDesc": "The name of the server in the LM Studio mcp.json file.",
